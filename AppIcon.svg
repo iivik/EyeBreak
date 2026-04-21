@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Background: deep navy rounded square (macOS app icon shape) -->
+  <rect width="1024" height="1024" rx="230" ry="230"
+        fill="url(#bg)"/>
+
+  <!-- Subtle radial glow behind the eye -->
+  <circle cx="512" cy="512" r="320" fill="url(#glow)" opacity="0.35"/>
+
+  <!-- Eye outline — open, relaxed, not cartoonish -->
+  <path d="M 120 512
+           C 240 280, 480 200, 512 200
+           C 544 200, 784 280, 904 512
+           C 784 744, 544 824, 512 824
+           C 480 824, 240 744, 120 512 Z"
+        fill="none"
+        stroke="url(#eyeStroke)"
+        stroke-width="38"
+        stroke-linejoin="round"
+        stroke-linecap="round"/>
+
+  <!-- Iris ring -->
+  <circle cx="512" cy="512" r="155"
+          fill="none"
+          stroke="url(#irisStroke)"
+          stroke-width="30"/>
+
+  <!-- Pupil -->
+  <circle cx="512" cy="512" r="72" fill="url(#pupil)"/>
+
+  <!-- Small specular highlight -->
+  <circle cx="558" cy="466" r="28" fill="white" opacity="0.55"/>
+
+  <!-- Subtle eyelash accent top -->
+  <path d="M 340 330 Q 370 295 400 315"
+        stroke="white" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.25"/>
+  <path d="M 480 260 Q 510 232 540 252"
+        stroke="white" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.25"/>
+  <path d="M 620 275 Q 650 248 678 272"
+        stroke="white" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.25"/>
+
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%"   stop-color="#0D1B36"/>
+      <stop offset="100%" stop-color="#060B18"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#5AB4FF" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#5AB4FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="eyeStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#7ECFFF"/>
+      <stop offset="100%" stop-color="#4A9FE0"/>
+    </linearGradient>
+
+    <linearGradient id="irisStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#6DC8FF"/>
+      <stop offset="100%" stop-color="#3A85C8"/>
+    </linearGradient>
+
+    <radialGradient id="pupil" cx="45%" cy="42%" r="55%">
+      <stop offset="0%"   stop-color="#1A4A7A"/>
+      <stop offset="100%" stop-color="#060F20"/>
+    </radialGradient>
+  </defs>
+</svg>
