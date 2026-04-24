@@ -24,6 +24,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         postureController.start()
 
         NotificationManager.shared.requestPermission()
+        OnboardingController.showIfNeeded(after: 1.2)
     }
 
     // MARK: - Status Bar

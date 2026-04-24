@@ -27,48 +27,48 @@ class AudioPlayer {
     // MARK: - C pentatonic melody  (C4 D4 E4 G4 A4 C5)
     // Each entry: (frequency Hz, duration seconds).  0 Hz = rest.
     private let melody: [(hz: Float, dur: Double)] = [
-        // ── Phrase A — gentle descent from C5
-        (523.25, 0.55),   // C5
-        (440.00, 0.45),   // A4
-        (392.00, 0.45),   // G4
-        (440.00, 0.45),   // A4
-        (523.25, 0.70),   // C5  (small peak)
-        (440.00, 0.45),   // A4
-        (392.00, 0.45),   // G4
-        (329.63, 0.50),   // E4
-        (261.63, 0.90),   // C4  (rest on tonic)
-        (0,      0.45),   // rest
-
-        // ── Phrase B — ascending answering phrase
-        (261.63, 0.45),   // C4
-        (293.66, 0.45),   // D4
+        // ── Phrase A — gentle arch: rise to E5 then settle
         (329.63, 0.45),   // E4
-        (392.00, 0.55),   // G4
-        (440.00, 0.60),   // A4
-        (392.00, 0.45),   // G4
-        (329.63, 0.45),   // E4
-        (261.63, 1.00),   // C4  (breath)
-        (0,      0.40),   // rest
-
-        // ── Phrase C — higher variation
-        (329.63, 0.45),   // E4
-        (392.00, 0.45),   // G4
-        (440.00, 0.50),   // A4
-        (523.25, 0.65),   // C5
-        (440.00, 0.45),   // A4
-        (392.00, 0.45),   // G4
-        (329.63, 0.45),   // E4
-        (293.66, 0.45),   // D4
-        (261.63, 0.85),   // C4
+        (392.00, 0.40),   // G4
+        (440.00, 0.40),   // A4
+        (493.88, 0.50),   // B4
+        (523.25, 0.65),   // C5   peak
+        (493.88, 0.40),   // B4
+        (440.00, 0.40),   // A4
+        (392.00, 0.50),   // G4
+        (349.23, 0.45),   // F4   semitone step — distinctly Western
+        (329.63, 0.80),   // E4
         (0,      0.35),   // rest
 
-        // ── Phrase D — closing cadence, settle to tonic
-        (293.66, 0.45),   // D4
-        (329.63, 0.45),   // E4
+        // ── Phrase B — step-wise descent with F and B
+        (523.25, 0.45),   // C5
+        (493.88, 0.40),   // B4
+        (440.00, 0.40),   // A4
         (392.00, 0.45),   // G4
-        (329.63, 0.45),   // E4
+        (349.23, 0.45),   // F4
+        (329.63, 0.40),   // E4
+        (293.66, 0.40),   // D4
+        (261.63, 0.90),   // C4
+        (0,      0.40),   // rest
+
+        // ── Phrase C — lyrical ascending answer
+        (261.63, 0.40),   // C4
+        (329.63, 0.40),   // E4
+        (349.23, 0.45),   // F4
+        (392.00, 0.45),   // G4
+        (440.00, 0.50),   // A4
+        (493.88, 0.55),   // B4
+        (523.25, 0.75),   // C5
+        (440.00, 0.40),   // A4
+        (392.00, 0.45),   // G4
+        (329.63, 0.80),   // E4
+        (0,      0.30),   // rest
+
+        // ── Phrase D — closing cadence B→C resolution (very Western)
+        (349.23, 0.40),   // F4
+        (329.63, 0.40),   // E4
         (293.66, 0.45),   // D4
-        (261.63, 1.50),   // C4  (final hold — fades out here)
+        (261.63, 1.60),   // C4   final hold
     ]
     // Total melody ≈ 17.7 s; with 2 s silence tail the buffer ≈ 19.7 s,
     // and a 3.5 s global fade-out covers the final hold.

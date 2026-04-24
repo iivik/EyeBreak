@@ -19,26 +19,26 @@ class PostureOverlayController {
             let p = makePanel(for: screen)
             if let cv = p.contentView {
                 cv.wantsLayer = true
+                cv.layer?.backgroundColor = NSColor.clear.cgColor
                 addContent(to: cv, screen: screen)
             }
             p.orderFrontRegardless()
             NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.20
+                ctx.duration = 0.18
                 p.animator().alphaValue = 1
             }
             panels.append(p)
         }
 
-        // Sharp marimba-style double-ping — distinct from break sounds
         AudioPlayer.playPostureAlert()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [weak self] in
+        // Total on-screen: 2.2 s — quick in, snappy rise, quick out
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { [weak self] in
             self?.dismiss()
         }
     }
 
     private func makePanel(for screen: NSScreen) -> NSPanel {
-        // Full-screen transparent panel so the arrow can float at any position
         let p = NSPanel(
             contentRect: screen.frame,
             styleMask:   [.borderless, .nonactivatingPanel],
@@ -58,105 +58,119 @@ class PostureOverlayController {
     // MARK: - Content
 
     private func addContent(to view: NSView, screen: NSScreen) {
-        let theme    = EmberTheme.dark
-        let arrowColor = theme.accent          // amber — visible on any background
+        let theme   = EmberTheme.dark
+        let W       = screen.frame.width
+        let H       = screen.frame.height
 
-        // ── Arrow — large, free-floating, pointing up toward the camera
-        let arrow = NSImageView()
-        arrow.translatesAutoresizingMaskIntoConstraints = false
-        arrow.wantsLayer = true
-        let cfg = NSImage.SymbolConfiguration(pointSize: 110, weight: .ultraLight)
-        arrow.image = NSImage(systemSymbolName: "arrow.up",
-                              accessibilityDescription: nil)?.withSymbolConfiguration(cfg)
-        arrow.contentTintColor = arrowColor
-        applyShadow(to: arrow, color: NSColor.black, opacity: 0.70, radius: 12)
-        view.addSubview(arrow)
+        // Arrow dimensions
+        let AW: CGFloat = 88    // arrow total width
+        let AH: CGFloat = 116   // arrow total height
+        let stemW = AW * 0.30   // stem width
+        let stemH = AH * 0.46   // stem height (bottom portion)
+        let startY: CGFloat = H * 0.30   // 30% from bottom — lower third
+        let endY:   CGFloat = H * 0.78   // 78% — near top / camera
 
-        // ── "Sit Up Straight" — bold enough to be read anywhere
-        let title = floatingLabel("Sit Up Straight",
-                                   size: 20, weight: .medium,
-                                   color: .white)
-        applyShadow(to: title, color: NSColor.black, opacity: 0.85, radius: 5)
-        view.addSubview(title)
+        // ── Custom drawn arrow (CAShapeLayer — chunky, bold, designed)
+        let arrowLayer = CAShapeLayer()
+        let path = CGMutablePath()
+        // Build upward-pointing arrow: stem at bottom, arrowhead on top
+        // Coordinates in local space: (0,0) = bottom-left of arrow bounding box
+        let sx = (AW - stemW) / 2          // stem left x
+        let ex = (AW + stemW) / 2          // stem right x
+        path.move(to:    CGPoint(x: sx,  y: 0))       // stem bottom-left
+        path.addLine(to: CGPoint(x: sx,  y: stemH))   // stem top-left
+        path.addLine(to: CGPoint(x: 0,   y: stemH))   // arrowhead left corner
+        path.addLine(to: CGPoint(x: AW/2, y: AH))     // arrowhead tip
+        path.addLine(to: CGPoint(x: AW,  y: stemH))   // arrowhead right corner
+        path.addLine(to: CGPoint(x: ex,  y: stemH))   // stem top-right
+        path.addLine(to: CGPoint(x: ex,  y: 0))       // stem bottom-right
+        path.closeSubpath()
+        arrowLayer.path      = path
+        arrowLayer.fillColor = theme.accent.cgColor
+        // Position: centre horizontally, start at startY
+        arrowLayer.frame     = CGRect(x: W/2 - AW/2, y: startY, width: AW, height: AH)
+        arrowLayer.opacity   = 0
 
-        // ── Sub label
-        let sub = floatingLabel("Roll shoulders back  ·  lift your chin",
-                                 size: 13, weight: .light,
-                                 color: NSColor.white.withAlphaComponent(0.75))
-        applyShadow(to: sub, color: NSColor.black, opacity: 0.85, radius: 4)
-        view.addSubview(sub)
+        // Amber glow behind arrow
+        let glowLayer = CALayer()
+        glowLayer.frame         = CGRect(x: W/2 - 70, y: startY + AH/2 - 70, width: 140, height: 140)
+        glowLayer.cornerRadius  = 70
+        glowLayer.backgroundColor = theme.accent.withAlphaComponent(0.18).cgColor
+        glowLayer.compositingFilter = "softLightBlendMode"
+        glowLayer.opacity       = 0
+        view.layer?.addSublayer(glowLayer)
+        view.layer?.addSublayer(arrowLayer)
 
-        // ── Amber glow under arrow
-        let glow = NSView()
-        glow.translatesAutoresizingMaskIntoConstraints = false
-        glow.wantsLayer = true
-        let glowLayer = CAGradientLayer()
-        glowLayer.type   = .radial
-        glowLayer.colors = [arrowColor.withAlphaComponent(0.25).cgColor, NSColor.clear.cgColor]
-        glowLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
-        glowLayer.endPoint   = CGPoint(x: 1.0, y: 1.0)
-        glow.layer?.addSublayer(glowLayer)
-        view.addSubview(glow)
+        // ── "Sit Up Straight" — amber, bold, large
+        let titleView = NSTextField(labelWithString: "Sit Up Straight")
+        titleView.font      = NSFont.systemFont(ofSize: 24, weight: .bold)
+        titleView.textColor = theme.accent
+        titleView.alignment = .center
+        titleView.wantsLayer = true
+        titleView.layer?.shadowColor   = NSColor.black.cgColor
+        titleView.layer?.shadowOpacity = 0.85
+        titleView.layer?.shadowRadius  = 8
+        titleView.layer?.shadowOffset  = CGSize(width: 0, height: -2)
+        titleView.frame     = CGRect(x: W/2 - 240, y: H * 0.23, width: 480, height: 32)
+        titleView.alphaValue = 0
+        view.addSubview(titleView)
 
-        // Place everything centred, arrow in upper-centre zone
-        // (biased toward top 40% of screen so it points clearly toward camera)
-        let midX = screen.frame.width  / 2
-        let midY = screen.frame.height * 0.58   // sit in upper-center
+        // ── Sub-text — warm cream, light
+        let subView = NSTextField(labelWithString: "Roll shoulders back  ·  lift your chin")
+        subView.font      = NSFont.systemFont(ofSize: 13, weight: .regular)
+        subView.textColor = theme.textMuted
+        subView.alignment = .center
+        subView.wantsLayer = true
+        subView.layer?.shadowColor   = NSColor.black.cgColor
+        subView.layer?.shadowOpacity = 0.80
+        subView.layer?.shadowRadius  = 5
+        subView.frame     = CGRect(x: W/2 - 260, y: H * 0.19, width: 520, height: 22)
+        subView.alphaValue = 0
+        view.addSubview(subView)
 
-        NSLayoutConstraint.activate([
-            arrow.centerXAnchor.constraint(equalTo: view.leadingAnchor, constant: midX),
-            arrow.centerYAnchor.constraint(equalTo: view.bottomAnchor,  constant: midY),
-
-            title.centerXAnchor.constraint(equalTo: arrow.centerXAnchor),
-            title.topAnchor.constraint(equalTo: arrow.bottomAnchor, constant: 12),
-
-            sub.centerXAnchor.constraint(equalTo: arrow.centerXAnchor),
-            sub.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 6),
-
-            glow.centerXAnchor.constraint(equalTo: arrow.centerXAnchor),
-            glow.centerYAnchor.constraint(equalTo: arrow.centerYAnchor),
-            glow.widthAnchor.constraint(equalToConstant: 200),
-            glow.heightAnchor.constraint(equalToConstant: 200),
-        ])
-
-        // Lay out glow gradient frame after layout pass
-        DispatchQueue.main.async {
-            glowLayer.frame = glow.bounds
+        // ── Phase 1: Fade in (0 → 0.25s)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.25
+            titleView.animator().alphaValue = 1.0
+            subView.animator().alphaValue   = 0.85
         }
 
-        // ── Bounce animation: 3 quick assertive snaps upward
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            let anim         = CAKeyframeAnimation(keyPath: "transform.translation.y")
-            anim.values      = [0, -46, 0, -46, 0, -46, 0]
-            anim.keyTimes    = [0, 0.10, 0.22, 0.32, 0.44, 0.54, 0.66]
-            anim.timingFunctions = (0..<6).map { i in
-                CAMediaTimingFunction(name: i % 2 == 0 ? .easeIn : .easeOut)
-            }
-            anim.duration    = 1.5
-            anim.repeatCount = 1
-            arrow.layer?.add(anim, forKey: "snap")
+        let fadeInAnim           = CABasicAnimation(keyPath: "opacity")
+        fadeInAnim.fromValue     = 0
+        fadeInAnim.toValue       = 1
+        fadeInAnim.duration      = 0.22
+        fadeInAnim.fillMode      = .forwards
+        fadeInAnim.isRemovedOnCompletion = false
+        arrowLayer.opacity       = 1
+        arrowLayer.add(fadeInAnim, forKey: "fadeIn")
+        glowLayer.opacity        = 1
+        glowLayer.add(fadeInAnim.copy() as! CABasicAnimation, forKey: "fadeIn")
+
+        // ── Phase 2: Arrow + glow rise (starts 0.1s, duration 1.5s)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
+            let riseAnim           = CABasicAnimation(keyPath: "position.y")
+            // CALayer position is the CENTER of the layer
+            riseAnim.fromValue     = startY + AH / 2
+            riseAnim.toValue       = endY   + AH / 2
+            riseAnim.duration      = 1.55
+            // Fast acceleration out, smooth ease into top
+            riseAnim.timingFunction = CAMediaTimingFunction(controlPoints: 0.20, 0.0, 0.2, 1.0)
+            riseAnim.fillMode      = .forwards
+            riseAnim.isRemovedOnCompletion = false
+            arrowLayer.position    = CGPoint(x: W/2, y: endY + AH / 2)
+            arrowLayer.add(riseAnim, forKey: "rise")
+
+            // Glow follows arrow
+            let glowRise           = riseAnim.copy() as! CABasicAnimation
+            glowRise.fromValue     = startY + AH/2
+            glowRise.toValue       = endY   + AH/2
+            self.glowLayer(glowLayer, followRise: endY + AH/2, W: W)
+            glowLayer.add(glowRise, forKey: "rise")
         }
     }
 
-    // MARK: - Helpers
-
-    private func floatingLabel(_ text: String, size: CGFloat,
-                                weight: NSFont.Weight, color: NSColor) -> NSTextField {
-        let f = NSTextField(labelWithString: text)
-        f.font      = NSFont.systemFont(ofSize: size, weight: weight)
-        f.textColor = color
-        f.alignment = .center
-        f.translatesAutoresizingMaskIntoConstraints = false
-        f.wantsLayer = true
-        return f
-    }
-
-    private func applyShadow(to view: NSView, color: NSColor,
-                              opacity: Float, radius: CGFloat) {
-        view.layer?.shadowColor   = color.cgColor
-        view.layer?.shadowOpacity = opacity
-        view.layer?.shadowRadius  = radius
-        view.layer?.shadowOffset  = CGSize(width: 0, height: -2)
+    private func glowLayer(_ layer: CALayer, followRise endCY: CGFloat, W: CGFloat) {
+        layer.position = CGPoint(x: W/2, y: endCY)
     }
 
     // MARK: - Dismiss
@@ -166,7 +180,7 @@ class PostureOverlayController {
         let toClose = panels
         panels.removeAll()
         NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.30
+            ctx.duration = 0.28
             toClose.forEach { $0.animator().alphaValue = 0 }
         } completionHandler: {
             toClose.forEach { $0.orderOut(nil) }

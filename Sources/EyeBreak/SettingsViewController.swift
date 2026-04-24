@@ -403,26 +403,23 @@ class SettingsViewController: NSViewController {
         border.frame = CGRect(x: 0, y: 0, width: 384, height: 0.5)
         footer.layer?.addSublayer(border)
 
-        let statsStack = NSStackView()
-        statsStack.translatesAutoresizingMaskIntoConstraints = false
-        statsStack.orientation  = .horizontal
-        statsStack.distribution = .fillEqually
-        statsStack.alignment    = .top
-        statsStack.spacing      = 0
-        footer.addSubview(statsStack)
-
-        // Build stat items
+        // Three stat items side-by-side, centred, with dividers between them
         let todayStat   = statItem(value: "\(StatsManager.shared.todayCount)",    label: "today",       theme: theme)
         let streakStat  = statItem(value: "\(StatsManager.shared.streakDays)",    label: "day streak",  theme: theme)
         let restedStat  = statItem(value: StatsManager.shared.todayRestFormatted, label: "eyes rested", theme: theme)
 
-        statsStack.addArrangedSubview(todayStat)
-        statsStack.addArrangedSubview(streakStat)
-        statsStack.addArrangedSubview(restedStat)
+        let div1 = statDivider(theme: theme)
+        let div2 = statDivider(theme: theme)
+
+        let statsStack = NSStackView(views: [todayStat, div1, streakStat, div2, restedStat])
+        statsStack.translatesAutoresizingMaskIntoConstraints = false
+        statsStack.orientation  = .horizontal
+        statsStack.alignment    = .centerY
+        statsStack.spacing      = 0
+        footer.addSubview(statsStack)
 
         NSLayoutConstraint.activate([
-            statsStack.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
-            statsStack.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
+            statsStack.centerXAnchor.constraint(equalTo: footer.centerXAnchor),
             statsStack.topAnchor.constraint(equalTo: footer.topAnchor, constant: 12),
             statsStack.bottomAnchor.constraint(equalTo: footer.bottomAnchor, constant: -12),
         ])
@@ -575,7 +572,7 @@ class SettingsViewController: NSViewController {
 
         let valueLbl = NSTextField(labelWithString: value)
         valueLbl.translatesAutoresizingMaskIntoConstraints = false
-        valueLbl.font      = NSFont.systemFont(ofSize: 15, weight: .semibold)
+        valueLbl.font      = NSFont.monospacedDigitSystemFont(ofSize: 20, weight: .semibold)
         valueLbl.textColor = theme.text
         valueLbl.alignment = .center
 
@@ -584,7 +581,7 @@ class SettingsViewController: NSViewController {
                                range: NSRange(location: 0, length: labelStr.length))
         labelStr.addAttribute(.foregroundColor, value: theme.textDim,
                                range: NSRange(location: 0, length: labelStr.length))
-        labelStr.addAttribute(.kern,            value: 0.5 as NSNumber,
+        labelStr.addAttribute(.kern,            value: 0.6 as NSNumber,
                                range: NSRange(location: 0, length: labelStr.length))
         let labelLbl = NSTextField(labelWithAttributedString: labelStr)
         labelLbl.translatesAutoresizingMaskIntoConstraints = false
@@ -594,16 +591,30 @@ class SettingsViewController: NSViewController {
         container.addSubview(labelLbl)
 
         NSLayoutConstraint.activate([
+            container.widthAnchor.constraint(equalToConstant: 96),
+
             valueLbl.topAnchor.constraint(equalTo: container.topAnchor),
             valueLbl.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             valueLbl.trailingAnchor.constraint(equalTo: container.trailingAnchor),
 
-            labelLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
+            labelLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 3),
             labelLbl.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             labelLbl.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             labelLbl.bottomAnchor.constraint(equalTo: container.bottomAnchor),
         ])
 
         return container
+    }
+
+    private func statDivider(theme: EmberTheme) -> NSView {
+        let v = NSView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.wantsLayer = true
+        v.layer?.backgroundColor = theme.border.cgColor
+        NSLayoutConstraint.activate([
+            v.widthAnchor.constraint(equalToConstant: 0.5),
+            v.heightAnchor.constraint(equalToConstant: 28),
+        ])
+        return v
     }
 }
