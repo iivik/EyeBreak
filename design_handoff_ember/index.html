@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EyeBreak · Design Directions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap"
+    />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+        background: #f0eee9;
+      }
+      * { box-sizing: border-box; }
+    </style>
+
+    <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel" src="design-canvas.jsx"></script>
+    <script type="text/babel" src="theme.jsx"></script>
+    <script type="text/babel" src="Settings.jsx"></script>
+    <script type="text/babel" src="BreakScreen.jsx"></script>
+    <script type="text/babel" src="MenuBar.jsx"></script>
+
+    <script type="text/babel">
+      const { useState } = React;
+
+      // ─── Macos window chrome wrapper (popover doesn't have traffic lights,
+      // but a subtle backdrop helps presentation) ───
+      function PresentationShell({ theme, width, height, children, label, note }) {
+        return (
+          <div
+            style={{
+              width,
+              height,
+              background: '#2a2520',
+              borderRadius: 12,
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundImage: `
+                radial-gradient(ellipse at 20% 10%, rgba(217, 146, 95, 0.12) 0%, transparent 45%),
+                radial-gradient(ellipse at 90% 80%, rgba(60, 40, 30, 0.5) 0%, transparent 50%),
+                linear-gradient(135deg, #1e1a17 0%, #2c2520 100%)
+              `,
+            }}
+          >
+            {children}
+            {note && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 10,
+                  left: 12,
+                  fontSize: 10,
+                  color: 'rgba(255,255,255,0.35)',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {note}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // ─── Direction section — settings + break + menu bar for one theme ───
+      function DirectionSection({ themeKey }) {
+        const theme = window.THEMES[themeKey];
+        const id = themeKey;
+        return (
+          <DCSection
+            id={id}
+            title={`${theme.name}`}
+            subtitle={theme.tagline}
+          >
+            {/* Settings popover — rendered on a faux-desktop backdrop so the notch reads right */}
+            <DCArtboard
+              id={`${id}-settings`}
+              label="Settings popover"
+              width={460}
+              height={820}
+            >
+              <PresentationShell theme={theme} width={460} height={820}>
+                {/* faux menu bar peeking at top */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 26,
+                    background: 'rgba(20, 16, 14, 0.7)',
+                    backdropFilter: 'blur(20px)',
+                    borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    padding: '0 14px',
+                    gap: 12,
+                    fontSize: 11,
+                    color: 'rgba(255,255,255,0.55)',
+                    fontFamily: theme.fontBody,
+                    zIndex: 2,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '2px 7px',
+                      borderRadius: 4,
+                      background: theme.accentSoft,
+                    }}
+                  >
+                    <EyeGlyph color={theme.accent} size={13} />
+                    <span style={{ fontFamily: theme.fontMono, color: theme.accent, fontSize: 11 }}>7m</span>
+                  </div>
+                  <span>Wed 16:24</span>
+                </div>
+                <div style={{ position: 'absolute', top: 42, left: '50%', transform: 'translateX(-50%)' }}>
+                  <SettingsPopover theme={theme} />
+                </div>
+              </PresentationShell>
+            </DCArtboard>
+
+            {/* Break screen */}
+            <DCArtboard
+              id={`${id}-break`}
+              label="Break screen"
+              width={760}
+              height={480}
+            >
+              <BreakScreen theme={theme} countdown={13} width={760} height={480} />
+            </DCArtboard>
+
+            {/* Menu bar dropdown */}
+            <DCArtboard
+              id={`${id}-menu`}
+              label="Menu bar dropdown"
+              width={360}
+              height={320}
+            >
+              <PresentationShell theme={theme} width={360} height={320}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+                  <MenuBar theme={theme} />
+                </div>
+              </PresentationShell>
+            </DCArtboard>
+          </DCSection>
+        );
+      }
+
+      function App() {
+        return (
+          <DesignCanvas>
+            {/* ─── Cover / intro ─── */}
+            <DCSection
+              id="intro"
+              title="EyeBreak"
+              subtitle="Mac menu bar · warm-zen dark · three directions"
+            >
+              <DCArtboard id="cover" label="Overview" width={560} height={340}>
+                <Overview />
+              </DCArtboard>
+              <DCArtboard id="palette" label="Palette comparison" width={560} height={340}>
+                <PaletteCompare />
+              </DCArtboard>
+            </DCSection>
+
+            <DirectionSection themeKey="ember" />
+            <DirectionSection themeKey="dune" />
+            <DirectionSection themeKey="horizon" />
+          </DesignCanvas>
+        );
+      }
+
+      function Overview() {
+        return (
+          <div
+            style={{
+              width: 560,
+              height: 340,
+              background: '#1a1613',
+              borderRadius: 10,
+              padding: '32px 38px',
+              color: '#f4ead9',
+              fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  color: '#d9925f',
+                  fontWeight: 600,
+                  marginBottom: 14,
+                }}
+              >
+                EyeBreak · macOS menu bar utility
+              </div>
+              <div
+                style={{
+                  fontSize: 30,
+                  fontWeight: 300,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.15,
+                  marginBottom: 14,
+                  textWrap: 'pretty',
+                }}
+              >
+                Rest your eyes, every twenty minutes.<br />
+                <span style={{ color: 'rgba(244,234,217,0.55)' }}>
+                  Warm-zen dark. Mac-native adjacent. Three coherent directions.
+                </span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+              {[
+                ['Settings popover', 'full spec'],
+                ['Break screen', 'fullscreen overlay'],
+                ['Menu bar dropdown', 'quick actions'],
+              ].map(([a, b]) => (
+                <div key={a} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500 }}>{a}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(244,234,217,0.5)' }}>{b}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      function PaletteCompare() {
+        const rows = [
+          { key: 'ember', name: 'Ember', tag: 'Deep ink · amber · native-feeling' },
+          { key: 'dune', name: 'Dune', tag: 'Dusk taupe · editorial serif numbers' },
+          { key: 'horizon', name: 'Horizon', tag: 'Near-black · candle glow · minimal' },
+        ];
+        return (
+          <div
+            style={{
+              width: 560,
+              height: 340,
+              background: '#fafaf7',
+              borderRadius: 10,
+              padding: 26,
+              fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+              color: '#2a251f',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <div style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#8a7560', fontWeight: 600 }}>
+              Palettes at a glance
+            </div>
+            {rows.map((r) => {
+              const t = window.THEMES[r.key];
+              const swatches = [t.bg, t.bgElev, t.accent, t.text, t.label];
+              return (
+                <div
+                  key={r.key}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '130px 1fr 220px',
+                    gap: 18,
+                    alignItems: 'center',
+                    padding: '14px 16px',
+                    background: '#fff',
+                    borderRadius: 8,
+                    boxShadow: '0 0 0 0.5px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>{r.name}</div>
+                    <div style={{ fontSize: 11, color: '#8a7560', marginTop: 2 }}>{r.tag}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {swatches.map((c, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 6,
+                          background: c,
+                          boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.08)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div
+                    style={{
+                      height: 42,
+                      borderRadius: 6,
+                      background: t.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0 12px',
+                      gap: 8,
+                    }}
+                  >
+                    <EyeGlyph color={t.accent} size={14} />
+                    <span style={{ color: t.text, fontSize: 12, fontWeight: 500 }}>Next break</span>
+                    <span
+                      style={{
+                        marginLeft: 'auto',
+                        color: t.accent,
+                        fontFamily: t.fontMono,
+                        fontSize: 11,
+                      }}
+                    >
+                      7m
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>
