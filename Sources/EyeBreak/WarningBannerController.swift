@@ -40,7 +40,7 @@ class WarningBannerController: NSObject {
             defer:       false
         )
         p.level              = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 1)
-        p.backgroundColor    = NSColor(calibratedRed: 0.06, green: 0.10, blue: 0.18, alpha: 0.97)
+        p.backgroundColor    = NSColor(calibratedRed: 0.14, green: 0.18, blue: 0.28, alpha: 0.98)
         p.isOpaque           = false
         p.alphaValue         = 0
         p.hasShadow          = true
@@ -77,7 +77,7 @@ class WarningBannerController: NSObject {
         view.addSubview(eye)
 
         let lbl = NSTextField(labelWithString: "Eye break in 1 minute")
-        lbl.font      = NSFont.systemFont(ofSize: 13, weight: .light)
+        lbl.font      = NSFont.systemFont(ofSize: 14, weight: .regular)
         lbl.textColor = .white
         lbl.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(lbl)
@@ -109,8 +109,9 @@ class WarningBannerController: NSObject {
 
     private func pill(_ title: String, _ action: Selector) -> NSButton {
         let b = NSButton(title: title, target: self, action: action)
-        b.bezelStyle = .rounded
-        b.font = NSFont.systemFont(ofSize: 11, weight: .regular)
+        b.isBordered      = false
+        b.font            = NSFont.systemFont(ofSize: 12, weight: .medium)
+        b.contentTintColor = NSColor(calibratedRed: 0.50, green: 0.78, blue: 1.0, alpha: 1.0)
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }
