@@ -14,14 +14,15 @@ class AboutWindowController: NSWindowController {
 
     init() {
         let win = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 390),
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 370),
             styleMask:   [.titled, .closable, .fullSizeContentView],
             backing:     .buffered,
             defer:       false
         )
         win.titlebarAppearsTransparent = true
-        win.titleVisibility = .hidden
+        win.titleVisibility            = .hidden
         win.isMovableByWindowBackground = true
+        win.appearance = NSAppearance(named: .darkAqua)
         win.center()
         win.title = "About EyeBreak"
         super.init(window: win)
@@ -34,136 +35,131 @@ class AboutWindowController: NSWindowController {
 
     private func buildContent() {
         guard let view = window?.contentView else { return }
+        let theme = EmberTheme.dark
         view.wantsLayer = true
+        view.layer?.backgroundColor = theme.bg.cgColor
 
-        // ── Gradient background: deep navy → near-black
-        let grad = CAGradientLayer()
-        grad.frame = view.bounds
-        grad.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        grad.colors  = [
-            NSColor(calibratedRed: 0.06, green: 0.09, blue: 0.16, alpha: 1).cgColor,
-            NSColor(calibratedRed: 0.02, green: 0.03, blue: 0.06, alpha: 1).cgColor,
-        ]
-        grad.startPoint = CGPoint(x: 0.5, y: 0)
-        grad.endPoint   = CGPoint(x: 0.5, y: 1)
-        view.layer?.addSublayer(grad)
+        // Subtle top-glow: amber radial from top-centre
+        let glowLayer = CAGradientLayer()
+        glowLayer.type        = .radial
+        glowLayer.colors      = [theme.accent.withAlphaComponent(0.10).cgColor, NSColor.clear.cgColor]
+        glowLayer.startPoint  = CGPoint(x: 0.5, y: 0.5)
+        glowLayer.endPoint    = CGPoint(x: 1.0, y: 1.0)
+        glowLayer.frame       = CGRect(x: 340/2 - 160, y: 370 - 120, width: 320, height: 200)
+        view.layer?.addSublayer(glowLayer)
 
-        // ── Eye icon (SF Symbol, large)
-        let iconView = NSImageView()
-        iconView.translatesAutoresizingMaskIntoConstraints = false
-        let symConfig = NSImage.SymbolConfiguration(pointSize: 52, weight: .ultraLight)
-        if let img = NSImage(systemSymbolName: "eye", accessibilityDescription: "EyeBreak") {
-            iconView.image = img.withSymbolConfiguration(symConfig)
-        }
-        iconView.contentTintColor = NSColor(calibratedRed: 0.45, green: 0.72, blue: 1.0, alpha: 1)
-        view.addSubview(iconView)
+        // ── Eye glyph (custom Ember version)
+        let eye = EyeGlyphView(glyphSize: 44, color: theme.accent)
+        view.addSubview(eye)
 
         // ── App name
-        let nameLabel = label("EyeBreak", size: 28, weight: .thin, color: .white)
+        let nameLabel = emberLabel("EyeBreak", size: 26, weight: .light, color: theme.text)
         view.addSubview(nameLabel)
 
-        // ── Version (secret: click 5× to enter dev code)
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        // ── Version (secret: 5 taps → dev code)
+        let version  = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0"
         let buildNum = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        let versionLabel = TapTextField(
-            labelWithString: "Version \(version) (\(buildNum))")
-        versionLabel.font      = NSFont.systemFont(ofSize: 12, weight: .light)
-        versionLabel.textColor = NSColor.white.withAlphaComponent(0.40)
+        let versionLabel = TapTextField(labelWithString: "v\(version) (\(buildNum))")
+        versionLabel.font      = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        versionLabel.textColor = theme.textDim
         versionLabel.alignment = .center
         versionLabel.translatesAutoresizingMaskIntoConstraints = false
         versionLabel.onFiveTaps = { [weak self] in self?.promptDevCode() }
         view.addSubview(versionLabel)
 
+        // ── Divider
+        let divLine = divider(theme: theme)
+        view.addSubview(divLine)
+
         // ── Tagline
-        let tagline = label("The 20-20-20 rule for eye health.",
-                             size: 13, weight: .light,
-                             color: NSColor.white.withAlphaComponent(0.65))
+        let tagline = emberLabel("The 20-20-20 rule for eye health.",
+                                  size: 12, weight: .regular, color: theme.textMuted)
         view.addSubview(tagline)
 
         // ── Description
-        let desc = label(
-            "Every 20 minutes, look at something 20 feet away\nfor 20 seconds. Pauses automatically during calls.",
-            size: 12, weight: .ultraLight,
-            color: NSColor.white.withAlphaComponent(0.50)
-        )
+        let desc = emberLabel(
+            "Every 20 minutes, look at something\n20 feet away for 20 seconds.",
+            size: 11, weight: .regular, color: theme.textDim)
+        desc.maximumNumberOfLines    = 3
+        desc.preferredMaxLayoutWidth = 280
         (desc.cell as? NSTextFieldCell)?.wraps = true
-        desc.maximumNumberOfLines = 3
-        desc.preferredMaxLayoutWidth = 300
         view.addSubview(desc)
 
-        // ── Trial / purchase status
+        // ── Status
         let trial = TrialManager.shared
-        let statusText: String
-        let statusColor: NSColor
+        let (statusText, statusColor): (String, NSColor)
         if trial.isPurchased {
             statusText  = "✓  Licensed"
             statusColor = NSColor(calibratedRed: 0.35, green: 0.85, blue: 0.55, alpha: 1)
         } else if trial.isTrialActive {
-            statusText  = "Free trial · \(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") remaining"
-            statusColor = NSColor(calibratedRed: 0.95, green: 0.78, blue: 0.30, alpha: 1)
+            statusText  = "Free trial · \(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") left"
+            statusColor = theme.accent
         } else {
             statusText  = "Trial expired · Purchase to continue"
             statusColor = NSColor(calibratedRed: 1.0, green: 0.45, blue: 0.40, alpha: 1)
         }
-        let statusLabel = label(statusText, size: 11, weight: .regular, color: statusColor)
+        let statusLabel = emberLabel(statusText, size: 11, weight: .medium, color: statusColor)
         view.addSubview(statusLabel)
 
         // ── Author / links
-        let authorLabel = label("by Vikas Anand", size: 11, weight: .light,
-                                color: NSColor.white.withAlphaComponent(0.45))
+        let authorLabel = emberLabel("by Vikas Anand", size: 11, weight: .regular, color: theme.textDim)
         view.addSubview(authorLabel)
 
-        let websiteButton = linkButton("vikasanand.com", url: "https://vikasanand.com")
-        view.addSubview(websiteButton)
-
-        let emailButton = linkButton("sakivva@gmail.com", url: "mailto:sakivva@gmail.com")
-        view.addSubview(emailButton)
+        let websiteBtn = linkButton("vikasanand.com",   url: "https://vikasanand.com", theme: theme)
+        let emailBtn   = linkButton("sakivva@gmail.com", url: "mailto:sakivva@gmail.com", theme: theme)
+        view.addSubview(websiteBtn)
+        view.addSubview(emailBtn)
 
         // ── Copyright
         let year = Calendar.current.component(.year, from: Date())
-        let copy = label("© \(year) Vikas Anand",
-                         size: 10, weight: .ultraLight,
-                         color: NSColor.white.withAlphaComponent(0.28))
+        let copy = emberLabel("© \(year) Vikas Anand", size: 10, weight: .regular,
+                               color: theme.textDim.withAlphaComponent(0.5))
         view.addSubview(copy)
 
         // ── Constraints
         NSLayoutConstraint.activate([
-            iconView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            iconView.topAnchor.constraint(equalTo: view.topAnchor, constant: 44),
+            eye.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            eye.topAnchor.constraint(equalTo: view.topAnchor, constant: 48),
+            eye.widthAnchor.constraint(equalToConstant: 44),
+            eye.heightAnchor.constraint(equalToConstant: 44),
 
             nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            nameLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 12),
+            nameLabel.topAnchor.constraint(equalTo: eye.bottomAnchor, constant: 10),
 
             versionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             versionLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
 
+            divLine.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            divLine.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
+            divLine.topAnchor.constraint(equalTo: versionLabel.bottomAnchor, constant: 20),
+            divLine.heightAnchor.constraint(equalToConstant: 0.5),
+
             tagline.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            tagline.topAnchor.constraint(equalTo: versionLabel.bottomAnchor, constant: 18),
+            tagline.topAnchor.constraint(equalTo: divLine.bottomAnchor, constant: 18),
 
             desc.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            desc.topAnchor.constraint(equalTo: tagline.bottomAnchor, constant: 8),
-            desc.widthAnchor.constraint(lessThanOrEqualToConstant: 300),
+            desc.topAnchor.constraint(equalTo: tagline.bottomAnchor, constant: 6),
 
             statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             statusLabel.topAnchor.constraint(equalTo: desc.bottomAnchor, constant: 18),
 
             authorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            authorLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 18),
+            authorLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
 
-            websiteButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            websiteButton.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 6),
+            websiteBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            websiteBtn.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 5),
 
-            emailButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emailButton.topAnchor.constraint(equalTo: websiteButton.bottomAnchor, constant: 4),
+            emailBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emailBtn.topAnchor.constraint(equalTo: websiteBtn.bottomAnchor, constant: 3),
 
             copy.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            copy.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16),
+            copy.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -14),
         ])
     }
 
     // MARK: - Helpers
 
-    private func label(_ text: String, size: CGFloat, weight: NSFont.Weight, color: NSColor) -> NSTextField {
+    private func emberLabel(_ text: String, size: CGFloat, weight: NSFont.Weight, color: NSColor) -> NSTextField {
         let f = NSTextField(labelWithString: text)
         f.font      = NSFont.systemFont(ofSize: size, weight: weight)
         f.textColor = color
@@ -172,12 +168,20 @@ class AboutWindowController: NSWindowController {
         return f
     }
 
-    private func linkButton(_ title: String, url: String) -> NSButton {
+    private func divider(theme: EmberTheme) -> NSView {
+        let v = NSView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.wantsLayer = true
+        v.layer?.backgroundColor = theme.border.cgColor
+        return v
+    }
+
+    private func linkButton(_ title: String, url: String, theme: EmberTheme) -> NSButton {
         let btn = NSButton(title: title, target: self, action: #selector(openLink(_:)))
-        btn.isBordered      = false
-        btn.font            = NSFont.systemFont(ofSize: 11, weight: .light)
-        btn.contentTintColor = NSColor(calibratedRed: 0.45, green: 0.72, blue: 1.0, alpha: 0.80)
-        btn.identifier      = NSUserInterfaceItemIdentifier(url)
+        btn.isBordered        = false
+        btn.font              = NSFont.systemFont(ofSize: 11, weight: .regular)
+        btn.contentTintColor  = theme.accent
+        btn.identifier        = NSUserInterfaceItemIdentifier(url)
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }
@@ -193,7 +197,7 @@ class AboutWindowController: NSWindowController {
     private func promptDevCode() {
         guard let win = window else { return }
         let alert = NSAlert()
-        alert.messageText    = "Developer Access"
+        alert.messageText     = "Developer Access"
         alert.informativeText = "Enter developer code to unlock:"
         alert.addButton(withTitle: "Unlock")
         alert.addButton(withTitle: "Cancel")
@@ -207,7 +211,7 @@ class AboutWindowController: NSWindowController {
             if field.stringValue == "VIKAS-EYEBREAK-DEV" {
                 TrialManager.shared.isPurchased = true
                 let ok = NSAlert()
-                ok.messageText = "Unlocked"
+                ok.messageText    = "Unlocked"
                 ok.informativeText = "Developer mode active. Trial removed."
                 ok.runModal()
             }
@@ -220,12 +224,8 @@ class AboutWindowController: NSWindowController {
 private class TapTextField: NSTextField {
     var onFiveTaps: (() -> Void)?
     private var count = 0
-
     override func mouseDown(with event: NSEvent) {
         count += 1
-        if count >= 5 {
-            count = 0
-            onFiveTaps?()
-        }
+        if count >= 5 { count = 0; onFiveTaps?() }
     }
 }

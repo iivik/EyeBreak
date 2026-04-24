@@ -371,8 +371,11 @@ class SettingsViewController: NSViewController {
         // ── GENERAL ───────────────────────────────────────
         stack.addArrangedSubview(sectionLabel("General", theme: theme))
 
-        let loginToggle = EmberToggle(size: .sm, isOn: AppSettings.shared.startAtLogin)
-        loginToggle.onChange = { on in AppSettings.shared.startAtLogin = on }
+        let loginToggle = EmberToggle(size: .sm, isOn: NotificationManager.shared.loginItemIsActive)
+        loginToggle.onChange = { on in
+            AppSettings.shared.startAtLogin = on
+            NotificationManager.shared.applyLoginItem(enabled: on)
+        }
         stack.addArrangedSubview(row(label: "Start at login", hint: nil, right: loginToggle, tight: true, theme: theme))
 
         let notifToggle = EmberToggle(size: .sm, isOn: AppSettings.shared.showInNotifCenter)
@@ -403,13 +406,14 @@ class SettingsViewController: NSViewController {
         let statsStack = NSStackView()
         statsStack.translatesAutoresizingMaskIntoConstraints = false
         statsStack.orientation  = .horizontal
-        statsStack.spacing      = 18
+        statsStack.distribution = .fillEqually
         statsStack.alignment    = .top
+        statsStack.spacing      = 0
         footer.addSubview(statsStack)
 
-        // Build stat items (will be updated in updateStats)
-        let todayStat   = statItem(value: "\(StatsManager.shared.todayCount)",    label: "today",      theme: theme)
-        let streakStat  = statItem(value: "\(StatsManager.shared.streakDays)",    label: "day streak", theme: theme)
+        // Build stat items
+        let todayStat   = statItem(value: "\(StatsManager.shared.todayCount)",    label: "today",       theme: theme)
+        let streakStat  = statItem(value: "\(StatsManager.shared.streakDays)",    label: "day streak",  theme: theme)
         let restedStat  = statItem(value: StatsManager.shared.todayRestFormatted, label: "eyes rested", theme: theme)
 
         statsStack.addArrangedSubview(todayStat)
@@ -417,9 +421,10 @@ class SettingsViewController: NSViewController {
         statsStack.addArrangedSubview(restedStat)
 
         NSLayoutConstraint.activate([
-            statsStack.leadingAnchor.constraint(equalTo: footer.leadingAnchor, constant: 18),
-            statsStack.topAnchor.constraint(equalTo: footer.topAnchor, constant: 11),
-            statsStack.bottomAnchor.constraint(equalTo: footer.bottomAnchor, constant: -11),
+            statsStack.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
+            statsStack.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
+            statsStack.topAnchor.constraint(equalTo: footer.topAnchor, constant: 12),
+            statsStack.bottomAnchor.constraint(equalTo: footer.bottomAnchor, constant: -12),
         ])
 
         return footer
@@ -570,15 +575,20 @@ class SettingsViewController: NSViewController {
 
         let valueLbl = NSTextField(labelWithString: value)
         valueLbl.translatesAutoresizingMaskIntoConstraints = false
-        valueLbl.font      = NSFont.systemFont(ofSize: 14, weight: .semibold)
+        valueLbl.font      = NSFont.systemFont(ofSize: 15, weight: .semibold)
         valueLbl.textColor = theme.text
+        valueLbl.alignment = .center
 
         let labelStr = NSMutableAttributedString(string: label.uppercased())
-        labelStr.addAttribute(.font,            value: NSFont.systemFont(ofSize: 10, weight: .medium), range: NSRange(location: 0, length: labelStr.length))
-        labelStr.addAttribute(.foregroundColor, value: theme.textDim, range: NSRange(location: 0, length: labelStr.length))
-        labelStr.addAttribute(.kern,            value: 0.4 as NSNumber, range: NSRange(location: 0, length: labelStr.length))
+        labelStr.addAttribute(.font,            value: NSFont.systemFont(ofSize: 9, weight: .medium),
+                               range: NSRange(location: 0, length: labelStr.length))
+        labelStr.addAttribute(.foregroundColor, value: theme.textDim,
+                               range: NSRange(location: 0, length: labelStr.length))
+        labelStr.addAttribute(.kern,            value: 0.5 as NSNumber,
+                               range: NSRange(location: 0, length: labelStr.length))
         let labelLbl = NSTextField(labelWithAttributedString: labelStr)
         labelLbl.translatesAutoresizingMaskIntoConstraints = false
+        labelLbl.alignment = .center
 
         container.addSubview(valueLbl)
         container.addSubview(labelLbl)
@@ -586,9 +596,11 @@ class SettingsViewController: NSViewController {
         NSLayoutConstraint.activate([
             valueLbl.topAnchor.constraint(equalTo: container.topAnchor),
             valueLbl.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            valueLbl.trailingAnchor.constraint(equalTo: container.trailingAnchor),
 
-            labelLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 1),
+            labelLbl.topAnchor.constraint(equalTo: valueLbl.bottomAnchor, constant: 2),
             labelLbl.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            labelLbl.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             labelLbl.bottomAnchor.constraint(equalTo: container.bottomAnchor),
         ])
 

@@ -22,6 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         breakControllerPublic.start()
         postureController.start()
+
+        NotificationManager.shared.requestPermission()
     }
 
     // MARK: - Status Bar

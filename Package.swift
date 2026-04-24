@@ -11,7 +11,9 @@ let package = Package(
             name: "EyeBreak",
             path: "Sources/EyeBreak",
             linkerSettings: [
-                .linkedFramework("CoreMediaIO")
+                .linkedFramework("CoreMediaIO"),
+                .linkedFramework("ServiceManagement"),
+                .linkedFramework("UserNotifications"),
             ]
         )
     ]

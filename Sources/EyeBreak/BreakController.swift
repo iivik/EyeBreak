@@ -88,6 +88,7 @@ class BreakController {
         if secondsUntilBreak == 60 && !warnFired {
             warnFired = true
             onWarning?()
+            NotificationManager.shared.postBreakWarning()
         }
 
         // Format: "Xm" when >60s, "Xs" when ≤60s
@@ -111,9 +112,26 @@ class BreakController {
     }
 
     private func handleBreakTime() {
+        NotificationManager.shared.cancelBreakWarning()
+
         if skipNext {
             skipNext = false
             resetTicker()
+            return
+        }
+
+        // Respect Do Not Disturb / Focus mode
+        if AppSettings.shared.respectDnD && NotificationManager.shared.isDNDActive() {
+            onStatusUpdate?("DND…")
+            DispatchQueue.main.asyncAfter(deadline: .now() + callRetryInterval) { [weak self] in
+                guard let self else { return }
+                // Re-check after 1 min — if still in DND, reset the full timer
+                if AppSettings.shared.respectDnD && NotificationManager.shared.isDNDActive() {
+                    self.resetTicker()
+                } else {
+                    self.executeBreak()
+                }
+            }
             return
         }
 
