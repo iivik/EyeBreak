@@ -4,7 +4,7 @@ class WarningBannerController: NSObject {
     var onSkip:  (() -> Void)?
     var onDelay: ((TimeInterval) -> Void)?
 
-    private var panel: NSPanel?
+    private var panel:       NSPanel?
     private var dismissItem: DispatchWorkItem?
 
     func show() {
@@ -28,10 +28,11 @@ class WarningBannerController: NSObject {
     private func build() {
         panel?.orderOut(nil)
 
+        let theme  = EmberTheme.dark
         let screen = NSScreen.main ?? NSScreen.screens[0]
-        let w: CGFloat = 380, h: CGFloat = 96
+        let w: CGFloat = 380, h: CGFloat = 90
         let origin = CGPoint(x: screen.frame.midX - w / 2,
-                             y: screen.frame.maxY - h - 56)
+                             y: screen.frame.maxY - h - 52)
 
         let p = NSPanel(
             contentRect: CGRect(origin: origin, size: CGSize(width: w, height: h)),
@@ -40,7 +41,7 @@ class WarningBannerController: NSObject {
             defer:       false
         )
         p.level              = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 1)
-        p.backgroundColor    = NSColor(calibratedRed: 0.14, green: 0.18, blue: 0.28, alpha: 0.98)
+        p.backgroundColor    = .clear
         p.isOpaque           = false
         p.alphaValue         = 0
         p.hasShadow          = true
@@ -48,9 +49,21 @@ class WarningBannerController: NSObject {
 
         if let cv = p.contentView {
             cv.wantsLayer = true
-            cv.layer?.cornerRadius  = 14
-            cv.layer?.masksToBounds = true
-            addContent(to: cv)
+
+            // Ember-dark background layer
+            let bg = CALayer()
+            bg.frame           = CGRect(x: 0, y: 0, width: w, height: h)
+            bg.backgroundColor = theme.bgElev.cgColor
+            bg.cornerRadius    = 14
+            bg.borderColor     = theme.borderStrong.cgColor
+            bg.borderWidth     = 0.5
+            bg.shadowColor     = NSColor.black.cgColor
+            bg.shadowOpacity   = 0.55
+            bg.shadowRadius    = 18
+            bg.shadowOffset    = CGSize(width: 0, height: -6)
+            cv.layer?.addSublayer(bg)
+
+            addContent(to: cv, theme: theme)
         }
 
         p.orderFrontRegardless()
@@ -67,52 +80,71 @@ class WarningBannerController: NSObject {
 
     // MARK: - Content
 
-    private func addContent(to view: NSView) {
-        let eye = NSImageView()
+    private func addContent(to view: NSView, theme: EmberTheme) {
+        // Eye glyph
+        let eye = EyeGlyphView(glyphSize: 18, color: theme.accent)
         eye.translatesAutoresizingMaskIntoConstraints = false
-        let cfg = NSImage.SymbolConfiguration(pointSize: 20, weight: .ultraLight)
-        eye.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)?
-            .withSymbolConfiguration(cfg)
-        eye.contentTintColor = NSColor(calibratedRed: 0.45, green: 0.72, blue: 1.0, alpha: 0.75)
+
+        // Title
+        let title = NSTextField(labelWithString: "Eye break in 1 minute")
+        title.translatesAutoresizingMaskIntoConstraints = false
+        title.font      = NSFont.systemFont(ofSize: 13, weight: .medium)
+        title.textColor = theme.text
+
+        // Amber accent bar (left edge)
+        let accentBar = NSView()
+        accentBar.translatesAutoresizingMaskIntoConstraints = false
+        accentBar.wantsLayer = true
+        accentBar.layer?.backgroundColor = theme.accent.cgColor
+        accentBar.layer?.cornerRadius    = 1.5
+
+        // Buttons
+        let skipBtn  = actionButton("Skip this break", theme: theme, selector: #selector(skipTapped))
+        let delayBtn = actionButton("+5 min",          theme: theme, selector: #selector(delayTapped))
+        let dimBtn   = actionButton("Dismiss",         theme: theme, selector: #selector(dimTapped))
+
+        view.addSubview(accentBar)
         view.addSubview(eye)
-
-        let lbl = NSTextField(labelWithString: "Eye break in 1 minute")
-        lbl.font      = NSFont.systemFont(ofSize: 14, weight: .regular)
-        lbl.textColor = .white
-        lbl.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(lbl)
-
-        let skipBtn  = pill("Skip this break", #selector(skipTapped))
-        let delayBtn = pill("+5 min",          #selector(delayTapped))
-        let dimBtn   = pill("Dismiss",         #selector(dimTapped))
+        view.addSubview(title)
         view.addSubview(skipBtn)
         view.addSubview(delayBtn)
         view.addSubview(dimBtn)
 
         NSLayoutConstraint.activate([
-            eye.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 18),
-            eye.topAnchor.constraint(equalTo: view.topAnchor, constant: 18),
+            // Accent bar
+            accentBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 14),
+            accentBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 18),
+            accentBar.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -18),
+            accentBar.widthAnchor.constraint(equalToConstant: 3),
 
-            lbl.leadingAnchor.constraint(equalTo: eye.trailingAnchor, constant: 10),
-            lbl.centerYAnchor.constraint(equalTo: eye.centerYAnchor),
+            // Eye
+            eye.leadingAnchor.constraint(equalTo: accentBar.trailingAnchor, constant: 12),
+            eye.topAnchor.constraint(equalTo: accentBar.topAnchor, constant: 1),
+            eye.widthAnchor.constraint(equalToConstant: 18),
+            eye.heightAnchor.constraint(equalToConstant: 18),
 
+            // Title
+            title.leadingAnchor.constraint(equalTo: eye.trailingAnchor, constant: 9),
+            title.centerYAnchor.constraint(equalTo: eye.centerYAnchor),
+
+            // Buttons row
             skipBtn.leadingAnchor.constraint(equalTo: eye.leadingAnchor),
-            skipBtn.topAnchor.constraint(equalTo: eye.bottomAnchor, constant: 10),
+            skipBtn.bottomAnchor.constraint(equalTo: accentBar.bottomAnchor),
 
-            delayBtn.leadingAnchor.constraint(equalTo: skipBtn.trailingAnchor, constant: 8),
+            delayBtn.leadingAnchor.constraint(equalTo: skipBtn.trailingAnchor, constant: 4),
             delayBtn.centerYAnchor.constraint(equalTo: skipBtn.centerYAnchor),
 
-            dimBtn.leadingAnchor.constraint(equalTo: delayBtn.trailingAnchor, constant: 8),
+            dimBtn.leadingAnchor.constraint(equalTo: delayBtn.trailingAnchor, constant: 4),
             dimBtn.centerYAnchor.constraint(equalTo: skipBtn.centerYAnchor),
         ])
     }
 
-    private func pill(_ title: String, _ action: Selector) -> NSButton {
-        let b = NSButton(title: title, target: self, action: action)
-        b.isBordered      = false
-        b.font            = NSFont.systemFont(ofSize: 12, weight: .medium)
-        b.contentTintColor = NSColor(calibratedRed: 0.50, green: 0.78, blue: 1.0, alpha: 1.0)
+    private func actionButton(_ title: String, theme: EmberTheme, selector: Selector) -> NSButton {
+        let b = NSButton(title: title, target: self, action: selector)
         b.translatesAutoresizingMaskIntoConstraints = false
+        b.isBordered        = false
+        b.font              = NSFont.systemFont(ofSize: 11, weight: .medium)
+        b.contentTintColor  = theme.accent
         return b
     }
 
