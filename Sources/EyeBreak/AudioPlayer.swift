@@ -258,6 +258,72 @@ class AudioPlayer {
         return buf
     }
 
+    // MARK: - Posture Alert (static func — independent of break audio state)
+
+    /// Sharp ascending two-tone "attention" ping. Distinct from break sounds.
+    /// C6 → E6 quick stab, bright marimba-like timbre, 0.9 s total.
+    static func playPostureAlert() {
+        let sr: Double = 44100
+        let eng = AVAudioEngine()
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sr, channels: 2) else { return }
+
+        // Two hits: C6 (1046 Hz) at t=0, E6 (1319 Hz) at t=0.12 s
+        let hits: [(startSec: Double, hz: Float)] = [(0.0, 1046.5), (0.12, 1318.5)]
+        var nodes: [AVAudioPlayerNode] = []
+
+        for hit in hits {
+            let hitLen   = 0.55
+            let totalDur = hit.startSec + hitLen
+            let frameCount = AVAudioFrameCount(sr * totalDur)
+            guard let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
+                  let chL = buf.floatChannelData?[0],
+                  let chR = buf.floatChannelData?[1] else { continue }
+            buf.frameLength = frameCount
+
+            let hitOff = Int(hit.startSec * sr)
+            let hitLen2 = Int(hitLen * sr)
+            let fsr = Float(sr)
+
+            for i in 0..<Int(frameCount) {
+                guard i >= hitOff else { continue }
+                let fi = i - hitOff
+                guard fi < hitLen2 else { break }
+                let t = Float(fi) / fsr
+
+                // Fast attack (3 ms), sharp exponential decay — marimba character
+                let attack: Float = fi < Int(fsr * 0.003) ? Float(fi) / Float(Int(fsr * 0.003)) : 1.0
+                let decay = exp(-5.5 * t)
+
+                let hz = hit.hz
+                // Marimba partials: fundamental + 4th harmonic (fast decay)
+                let p1 = sin(2.0 * .pi * hz        * t)
+                let p2 = 0.35 * exp(-12.0 * t) * sin(2.0 * .pi * hz * 4.0 * t)
+                let sample: Float = 0.28 * attack * decay * (p1 + p2) / 1.35
+
+                chL[i] = sample; chR[i] = sample
+            }
+
+            let node = AVAudioPlayerNode()
+            eng.attach(node)
+            eng.connect(node, to: eng.mainMixerNode, format: format)
+            node.scheduleBuffer(buf)
+            nodes.append(node)
+        }
+
+        eng.mainMixerNode.outputVolume = 0.85
+        do {
+            try eng.start()
+            nodes.forEach { $0.play() }
+        } catch { return }
+
+        // Keep engine alive until sound finishes, then release
+        let totalDuration = hits.last.map { $0.startSec + 0.55 } ?? 0.7
+        DispatchQueue.global().asyncAfter(deadline: .now() + totalDuration + 0.1) {
+            nodes.forEach { $0.stop() }
+            eng.stop()
+        }
+    }
+
     // MARK: - Helpers
 
     private func makeEngine() -> AVAudioEngine {
