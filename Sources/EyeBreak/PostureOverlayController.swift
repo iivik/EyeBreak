@@ -1,7 +1,7 @@
 import AppKit
 
 class PostureOverlayController {
-    private var panel: NSPanel?
+    private var panels: [NSPanel] = []
     private var onComplete: (() -> Void)?
 
     func show(onComplete: @escaping () -> Void) {
@@ -12,37 +12,41 @@ class PostureOverlayController {
     // MARK: - Build
 
     private func build() {
-        panel?.orderOut(nil)
+        // Dismiss any existing panels
+        panels.forEach { $0.orderOut(nil) }
+        panels.removeAll()
 
-        let screen = NSScreen.main ?? NSScreen.screens[0]
         let w: CGFloat = 280, h: CGFloat = 200
-        let origin = CGPoint(x: screen.frame.midX - w / 2,
-                             y: screen.frame.midY - h / 2)
 
-        let p = NSPanel(
-            contentRect: CGRect(origin: origin, size: CGSize(width: w, height: h)),
-            styleMask:   [.borderless, .nonactivatingPanel],
-            backing:     .buffered,
-            defer:       false
-        )
-        p.level              = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 1)
-        p.backgroundColor    = .clear
-        p.isOpaque           = false
-        p.alphaValue         = 0
-        p.hasShadow          = false
-        p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+        for screen in NSScreen.screens {
+            let origin = CGPoint(x: screen.frame.midX - w / 2,
+                                 y: screen.frame.midY - h / 2)
 
-        if let cv = p.contentView {
-            cv.wantsLayer = true
-            addContent(to: cv)
+            let p = NSPanel(
+                contentRect: CGRect(origin: origin, size: CGSize(width: w, height: h)),
+                styleMask:   [.borderless, .nonactivatingPanel],
+                backing:     .buffered,
+                defer:       false
+            )
+            p.level              = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)) + 1)
+            p.backgroundColor    = .clear
+            p.isOpaque           = false
+            p.alphaValue         = 0
+            p.hasShadow          = false
+            p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+
+            if let cv = p.contentView {
+                cv.wantsLayer = true
+                addContent(to: cv)
+            }
+
+            p.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.25
+                p.animator().alphaValue = 1
+            }
+            panels.append(p)
         }
-
-        p.orderFrontRegardless()
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.25
-            p.animator().alphaValue = 1
-        }
-        self.panel = p
 
         // Sharp single tap — "sit up" attitude
         NSSound(named: "Tink")?.play()
@@ -129,13 +133,14 @@ class PostureOverlayController {
     // MARK: - Dismiss
 
     private func dismiss() {
-        guard let p = panel else { return }
+        guard !panels.isEmpty else { return }
+        let toClose = panels
+        panels.removeAll()
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.35
-            p.animator().alphaValue = 0
+            toClose.forEach { $0.animator().alphaValue = 0 }
         } completionHandler: {
-            p.orderOut(nil)
-            self.panel = nil
+            toClose.forEach { $0.orderOut(nil) }
             self.onComplete?()
         }
     }

@@ -3,8 +3,9 @@ import Foundation
 
 // Persisted via UserDefaults
 enum SoundMode: String {
-    case music = "music"
-    case beep  = "beep"
+    case music  = "music"
+    case beep   = "beep"
+    case silent = "silent"
 }
 
 /// Synthesises all audio in memory — no bundled files required.
@@ -77,8 +78,9 @@ class AudioPlayer {
     func start() {
         stop()
         switch mode {
-        case .music: playMusic()
-        case .beep:  playBeep()
+        case .music:  playMusic()
+        case .beep:   playBeep()
+        case .silent: return
         }
     }
 

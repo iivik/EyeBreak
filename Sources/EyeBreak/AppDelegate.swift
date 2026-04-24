@@ -2,22 +2,25 @@ import AppKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
-    private var breakController: BreakController!
+    var breakControllerPublic: BreakController!   // internal access for SettingsViewController
     private var postureController: PostureController!
     private var warningBanner: WarningBannerController!
+
+    private var settingsPopover: NSPopover?
+    private var settingsVC:      SettingsViewController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        breakController  = BreakController()
-        postureController = PostureController()
-        warningBanner    = WarningBannerController()
+        breakControllerPublic = BreakController()
+        postureController     = PostureController()
+        warningBanner         = WarningBannerController()
 
         setupStatusBar()
         wireCallbacks()
         observeSettings()
 
-        breakController.start()
+        breakControllerPublic.start()
         postureController.start()
     }
 
@@ -27,16 +30,54 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            let symCfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .light)
-            if let img = NSImage(systemSymbolName: "eye", accessibilityDescription: "EyeBreak") {
-                button.image = img.withSymbolConfiguration(symCfg)
-            }
             button.imagePosition = .imageLeft
-            button.title = "  20:00\(TrialManager.shared.statusLabel)"
-            button.font  = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+            // Draw custom eye glyph as template image
+            updateStatusBarIcon()
+            button.title = "  20m"
+            button.font  = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
         }
 
         statusItem.menu = buildMenu()
+    }
+
+    private func updateStatusBarIcon() {
+        guard let button = statusItem.button else { return }
+        let size: CGFloat = 16
+        let img = NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            let color = NSColor.white  // status bar images are template-rendered
+            let s = size / 20.0
+            ctx.translateBy(x: 0, y: rect.height)
+            ctx.scaleBy(x: s, y: -s)
+
+            let path = CGMutablePath()
+            path.move(to: CGPoint(x: 1.5, y: 10))
+            path.addCurve(to: CGPoint(x: 10, y: 3.5),
+                          control1: CGPoint(x: 4, y: 5),
+                          control2: CGPoint(x: 7, y: 3.5))
+            path.addCurve(to: CGPoint(x: 18.5, y: 10),
+                          control1: CGPoint(x: 13, y: 3.5),
+                          control2: CGPoint(x: 16, y: 5))
+            path.addCurve(to: CGPoint(x: 10, y: 16.5),
+                          control1: CGPoint(x: 16, y: 15),
+                          control2: CGPoint(x: 13, y: 16.5))
+            path.addCurve(to: CGPoint(x: 1.5, y: 10),
+                          control1: CGPoint(x: 7, y: 16.5),
+                          control2: CGPoint(x: 4, y: 15))
+            path.closeSubpath()
+            ctx.setStrokeColor(color.cgColor)
+            ctx.setLineWidth(1.3 / s)
+            ctx.addPath(path)
+            ctx.strokePath()
+
+            let pupilR: CGFloat = 2.7
+            let pupilRect = CGRect(x: 10 - pupilR, y: 10 - pupilR, width: pupilR * 2, height: pupilR * 2)
+            ctx.setFillColor(color.cgColor)
+            ctx.fillEllipse(in: pupilRect)
+            return true
+        }
+        img.isTemplate = true
+        button.image = img
     }
 
     private func updateMenuBarTitle(_ countdown: String) {
@@ -54,8 +95,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
         menu.addItem(titled: "Settings…", action: #selector(openSettings), key: ",", target: self)
-
-        menu.addItem(.separator())
         menu.addItem(titled: "About EyeBreak", action: #selector(showAbout), key: "", target: self)
 
         if TrialManager.shared.isTrialExpired && !TrialManager.shared.isPurchased {
@@ -75,14 +114,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Callbacks & Settings
 
     private func wireCallbacks() {
-        breakController.onStatusUpdate = { [weak self] text in
+        breakControllerPublic.onStatusUpdate = { [weak self] text in
             DispatchQueue.main.async { self?.updateMenuBarTitle(text) }
         }
 
-        breakController.onWarning = { [weak self] in
+        breakControllerPublic.onWarning = { [weak self] in
             guard let self else { return }
-            self.warningBanner.onSkip  = { self.breakController.skipNextBreak() }
-            self.warningBanner.onDelay = { self.breakController.delay(by: $0) }
+            self.warningBanner.onSkip  = { self.breakControllerPublic.skipNextBreak() }
+            self.warningBanner.onDelay = { self.breakControllerPublic.delay(by: $0) }
             self.warningBanner.show()
         }
     }
@@ -97,7 +136,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func eyeBreakSettingsChanged() {
-        breakController.applySettings()
+        breakControllerPublic.applySettings()
     }
 
     @objc private func postureSettingsChangedNote() {
@@ -106,14 +145,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Break actions
 
-    @objc private func breakNow()     { warningBanner.dismiss(); breakController.triggerNow() }
-    @objc private func skipBreak()    { breakController.skipNextBreak() }
-    @objc private func pauseOneHour() { breakController.pause(for: 3600) }
+    @objc private func breakNow()     { warningBanner.dismiss(); breakControllerPublic.triggerNow() }
+    @objc private func skipBreak()    { breakControllerPublic.skipNextBreak() }
+    @objc private func pauseOneHour() { breakControllerPublic.pause(for: 3600) }
 
-    // MARK: - Windows
+    // MARK: - Windows / Popover
 
-    @objc private func openSettings() { SettingsWindowController.show() }
-    @objc private func showAbout()    { AboutWindowController.show() }
+    @objc private func openSettings() {
+        if settingsPopover == nil {
+            let vc = SettingsViewController()
+            settingsVC = vc
+
+            let popover = NSPopover()
+            popover.behavior            = .transient
+            popover.appearance          = NSAppearance(named: .darkAqua)
+            popover.contentViewController = vc
+            popover.contentSize         = NSSize(width: 384, height: 630)
+            settingsPopover = popover
+        }
+
+        guard let button = statusItem.button else { return }
+        settingsPopover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    }
+
+    @objc private func showAbout() { AboutWindowController.show() }
 
     @objc private func openPurchase() {
         if let url = URL(string: "https://apps.apple.com") {

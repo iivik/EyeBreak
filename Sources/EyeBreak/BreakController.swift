@@ -22,6 +22,11 @@ class BreakController {
     private let callDetector = CallDetector()
     private let audio        = AudioPlayer()
 
+    // MARK: - Public Accessors (for status pill)
+
+    var secondsUntilBreakPublic: Int { secondsUntilBreak }
+    var isPausedPublic: Bool         { isPaused }
+
     // MARK: - Public
 
     func start() {
@@ -85,12 +90,22 @@ class BreakController {
             onWarning?()
         }
 
-        let m = secondsUntilBreak / 60
-        let s = secondsUntilBreak % 60
-        onStatusUpdate?(String(format: "%02d:%02d", m, s))
+        // Format: "Xm" when >60s, "Xs" when ≤60s
+        let statusText: String
+        if secondsUntilBreak > 60 {
+            statusText = "\(secondsUntilBreak / 60)m"
+        } else {
+            statusText = "\(secondsUntilBreak)s"
+        }
+        onStatusUpdate?(statusText)
 
         if secondsUntilBreak <= 0 {
             ticker?.invalidate()
+            // If breaks are disabled, just reset without triggering overlay
+            guard AppSettings.shared.breakEnabled else {
+                resetTicker()
+                return
+            }
             handleBreakTime()
         }
     }
@@ -120,7 +135,9 @@ class BreakController {
         audio.mode = AppSettings.shared.soundMode
         audio.start()
 
-        overlay.show {
+        let dur = AppSettings.shared.breakDuration
+        overlay.show(duration: dur) {
+            StatsManager.shared.recordBreak(durationSec: dur)
             self.audio.stop()
             self.isInBreak = false
             if !self.isIdle { self.resetTicker() }
