@@ -62,12 +62,16 @@ class AboutWindowController: NSWindowController {
         let nameLabel = label("EyeBreak", size: 28, weight: .thin, color: .white)
         view.addSubview(nameLabel)
 
-        // ── Version
+        // ── Version (secret: click 5× to enter dev code)
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let buildNum = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        let versionLabel = label("Version \(version) (\(buildNum))",
-                                  size: 12, weight: .light,
-                                  color: NSColor.white.withAlphaComponent(0.40))
+        let versionLabel = TapTextField(
+            labelWithString: "Version \(version) (\(buildNum))")
+        versionLabel.font      = NSFont.systemFont(ofSize: 12, weight: .light)
+        versionLabel.textColor = NSColor.white.withAlphaComponent(0.40)
+        versionLabel.alignment = .center
+        versionLabel.translatesAutoresizingMaskIntoConstraints = false
+        versionLabel.onFiveTaps = { [weak self] in self?.promptDevCode() }
         view.addSubview(versionLabel)
 
         // ── Tagline
@@ -182,5 +186,46 @@ class AboutWindowController: NSWindowController {
         guard let urlString = sender.identifier?.rawValue,
               let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    // MARK: - Dev bypass
+
+    private func promptDevCode() {
+        guard let win = window else { return }
+        let alert = NSAlert()
+        alert.messageText    = "Developer Access"
+        alert.informativeText = "Enter developer code to unlock:"
+        alert.addButton(withTitle: "Unlock")
+        alert.addButton(withTitle: "Cancel")
+
+        let field = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+        field.placeholderString = "Code"
+        alert.accessoryView = field
+
+        alert.beginSheetModal(for: win) { response in
+            guard response == .alertFirstButtonReturn else { return }
+            if field.stringValue == "VIKAS-EYEBREAK-DEV" {
+                TrialManager.shared.isPurchased = true
+                let ok = NSAlert()
+                ok.messageText = "Unlocked"
+                ok.informativeText = "Developer mode active. Trial removed."
+                ok.runModal()
+            }
+        }
+    }
+}
+
+// MARK: - Tap-counting label
+
+private class TapTextField: NSTextField {
+    var onFiveTaps: (() -> Void)?
+    private var count = 0
+
+    override func mouseDown(with event: NSEvent) {
+        count += 1
+        if count >= 5 {
+            count = 0
+            onFiveTaps?()
+        }
     }
 }

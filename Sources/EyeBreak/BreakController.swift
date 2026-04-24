@@ -4,28 +4,23 @@ import CoreGraphics
 
 class BreakController {
     var onStatusUpdate: ((String) -> Void)?
+    var onWarning: (() -> Void)?           // fires at T-60 seconds
 
-    private let breakInterval: TimeInterval = 20 * 60
     private let callRetryInterval: TimeInterval = 60
-    private let idleThreshold: TimeInterval = 90   // seconds of inactivity → idle
-    private let idleCheckInterval: TimeInterval = 5 // how often we poll system idle time
+    private let idleCheckInterval: TimeInterval = 5
 
     private var ticker: Timer?
     private var idleTimer: Timer?
-    private var secondsUntilBreak: Int = 20 * 60
-    private var isPaused = false
-    private var skipNext = false
-    private var isIdle = false
-    private var isInBreak = false  // overlay is currently visible
+    private var secondsUntilBreak: Int = 0
+    private var isPaused   = false
+    private var skipNext   = false
+    private var isIdle     = false
+    private var isInBreak  = false
+    private var warnFired  = false         // so we fire the warning only once per cycle
 
-    var soundMode: SoundMode {
-        get { audio.mode }
-        set { audio.mode = newValue }
-    }
-
-    private let overlay = OverlayWindowController()
+    private let overlay      = OverlayWindowController()
     private let callDetector = CallDetector()
-    private let audio = AudioPlayer()
+    private let audio        = AudioPlayer()
 
     // MARK: - Public
 
@@ -33,6 +28,11 @@ class BreakController {
         resetTicker()
         startIdleMonitor()
         observeSleepWake()
+    }
+
+    func applySettings() {
+        guard !isPaused, !isInBreak else { return }
+        resetTicker()
     }
 
     func skipNextBreak() {
@@ -44,7 +44,6 @@ class BreakController {
         isPaused = true
         ticker?.invalidate()
         onStatusUpdate?("PAUSED")
-
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
             guard let self else { return }
             self.isPaused = false
@@ -57,13 +56,18 @@ class BreakController {
         executeBreak()
     }
 
+    func delay(by seconds: TimeInterval) {
+        secondsUntilBreak += Int(seconds)
+    }
+
     // MARK: - Private
 
     private func resetTicker() {
         ticker?.invalidate()
-        secondsUntilBreak = Int(breakInterval)
+        secondsUntilBreak = Int(AppSettings.shared.breakInterval)
         isInBreak = false
-        isIdle = false
+        isIdle    = false
+        warnFired = false
 
         ticker = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.tick()
@@ -75,6 +79,12 @@ class BreakController {
         guard !isPaused, !isIdle else { return }
 
         secondsUntilBreak -= 1
+
+        if secondsUntilBreak == 60 && !warnFired {
+            warnFired = true
+            onWarning?()
+        }
+
         let m = secondsUntilBreak / 60
         let s = secondsUntilBreak % 60
         onStatusUpdate?(String(format: "%02d:%02d", m, s))
@@ -96,11 +106,7 @@ class BreakController {
             onStatusUpdate?("CALL…")
             DispatchQueue.main.asyncAfter(deadline: .now() + callRetryInterval) { [weak self] in
                 guard let self else { return }
-                if self.callDetector.isOnCall() {
-                    self.resetTicker()
-                } else {
-                    self.executeBreak()
-                }
+                if self.callDetector.isOnCall() { self.resetTicker() } else { self.executeBreak() }
             }
             return
         }
@@ -111,16 +117,13 @@ class BreakController {
     private func executeBreak() {
         isInBreak = true
         onStatusUpdate?("REST")
+        audio.mode = AppSettings.shared.soundMode
         audio.start()
 
         overlay.show {
             self.audio.stop()
             self.isInBreak = false
-            // Only restart the ticker if we're not idle; if idle, the idle monitor
-            // will call resetTicker() when the user returns.
-            if !self.isIdle {
-                self.resetTicker()
-            }
+            if !self.isIdle { self.resetTicker() }
         }
     }
 
@@ -137,21 +140,17 @@ class BreakController {
     private func checkIdle() {
         guard !isPaused else { return }
 
-        let systemIdle = secondsSinceLastUserEvent()
+        let sysIdle = secondsSinceLastUserEvent()
+        let threshold = AppSettings.shared.idleThreshold
 
-        if !isIdle && systemIdle >= idleThreshold {
-            // User just went idle
+        if !isIdle && sysIdle >= threshold {
             isIdle = true
             ticker?.invalidate()
-            if !isInBreak {
-                onStatusUpdate?("IDLE")
-            }
-        } else if isIdle && systemIdle < idleCheckInterval * 2 {
-            // User just came back
+            if !isInBreak { onStatusUpdate?("IDLE") }
+
+        } else if isIdle && sysIdle < idleCheckInterval * 2 {
             isIdle = false
-            if !isInBreak {
-                resetTicker()
-            }
+            if !isInBreak { resetTicker() }
         }
     }
 
@@ -166,19 +165,13 @@ class BreakController {
 
     private func observeSleepWake() {
         NSWorkspace.shared.notificationCenter.addObserver(
-            self,
-            selector: #selector(systemDidWake),
-            name: NSWorkspace.didWakeNotification,
-            object: nil
-        )
+            self, selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification, object: nil)
     }
 
     @objc private func systemDidWake() {
         guard !isPaused else { return }
-        // Treat wake-from-sleep the same as returning from idle — restart fresh
         isIdle = false
-        if !isInBreak {
-            resetTicker()
-        }
+        if !isInBreak { resetTicker() }
     }
 }

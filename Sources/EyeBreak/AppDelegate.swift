@@ -1,27 +1,24 @@
 import AppKit
 
-private let kSoundModeKey = "com.eyebreak.soundMode"
-
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var breakController: BreakController!
-    private var musicMenuItem: NSMenuItem!
-    private var beepMenuItem:  NSMenuItem!
+    private var postureController: PostureController!
+    private var warningBanner: WarningBannerController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        breakController = BreakController()
-
-        let saved = UserDefaults.standard.string(forKey: kSoundModeKey) ?? SoundMode.music.rawValue
-        breakController.soundMode = SoundMode(rawValue: saved) ?? .music
+        breakController  = BreakController()
+        postureController = PostureController()
+        warningBanner    = WarningBannerController()
 
         setupStatusBar()
+        wireCallbacks()
+        observeSettings()
 
-        breakController.onStatusUpdate = { [weak self] text in
-            DispatchQueue.main.async { self?.updateMenuBarTitle(text) }
-        }
         breakController.start()
+        postureController.start()
     }
 
     // MARK: - Status Bar
@@ -30,7 +27,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            // SF Symbol eye — clean, scalable, no emoji
             let symCfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .light)
             if let img = NSImage(systemSymbolName: "eye", accessibilityDescription: "EyeBreak") {
                 button.image = img.withSymbolConfiguration(symCfg)
@@ -57,70 +53,69 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(titled: "Pause for 1 Hour", action: #selector(pauseOneHour), key: "p", target: self)
 
         menu.addItem(.separator())
-
-        // ── Sound submenu
-        let soundParent = NSMenuItem(title: "Sound", action: nil, keyEquivalent: "")
-        let soundSub    = NSMenu(title: "Sound")
-
-        musicMenuItem = NSMenuItem(title: "Soothing Music", action: #selector(selectMusic), keyEquivalent: "")
-        musicMenuItem.target = self
-        beepMenuItem  = NSMenuItem(title: "Beep Only",      action: #selector(selectBeep),  keyEquivalent: "")
-        beepMenuItem.target  = self
-
-        soundSub.addItem(musicMenuItem)
-        soundSub.addItem(beepMenuItem)
-        soundParent.submenu = soundSub
-        menu.addItem(soundParent)
-        updateSoundCheckmarks()
+        menu.addItem(titled: "Settings…", action: #selector(openSettings), key: ",", target: self)
 
         menu.addItem(.separator())
-
-        // ── About / purchase
         menu.addItem(titled: "About EyeBreak", action: #selector(showAbout), key: "", target: self)
 
         if TrialManager.shared.isTrialExpired && !TrialManager.shared.isPurchased {
-            let buyItem = NSMenuItem(title: "Purchase EyeBreak…", action: #selector(openPurchase), keyEquivalent: "")
+            let buyItem = NSMenuItem(title: "Purchase EyeBreak…",
+                                     action: #selector(openPurchase), keyEquivalent: "")
             buyItem.target = self
             menu.addItem(buyItem)
         }
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit EyeBreak", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-
+        menu.addItem(NSMenuItem(title: "Quit EyeBreak",
+                                action: #selector(NSApplication.terminate(_:)),
+                                keyEquivalent: "q"))
         return menu
     }
 
-    // MARK: - Sound
+    // MARK: - Callbacks & Settings
 
-    @objc private func selectMusic() { applySound(.music) }
-    @objc private func selectBeep()  { applySound(.beep)  }
+    private func wireCallbacks() {
+        breakController.onStatusUpdate = { [weak self] text in
+            DispatchQueue.main.async { self?.updateMenuBarTitle(text) }
+        }
 
-    private func applySound(_ mode: SoundMode) {
-        breakController.soundMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: kSoundModeKey)
-        updateSoundCheckmarks()
+        breakController.onWarning = { [weak self] in
+            guard let self else { return }
+            self.warningBanner.onSkip  = { self.breakController.skipNextBreak() }
+            self.warningBanner.onDelay = { self.breakController.delay(by: $0) }
+            self.warningBanner.show()
+        }
     }
 
-    private func updateSoundCheckmarks() {
-        let current = breakController.soundMode
-        musicMenuItem.state = (current == .music) ? .on : .off
-        beepMenuItem.state  = (current == .beep)  ? .on : .off
+    private func observeSettings() {
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(eyeBreakSettingsChanged),
+            name: .eyeBreakSettingsChanged, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(postureSettingsChangedNote),
+            name: .postureSettingsChanged, object: nil)
+    }
+
+    @objc private func eyeBreakSettingsChanged() {
+        breakController.applySettings()
+    }
+
+    @objc private func postureSettingsChangedNote() {
+        postureController.restart()
     }
 
     // MARK: - Break actions
 
-    @objc private func breakNow()     { breakController.triggerNow() }
+    @objc private func breakNow()     { warningBanner.dismiss(); breakController.triggerNow() }
     @objc private func skipBreak()    { breakController.skipNextBreak() }
     @objc private func pauseOneHour() { breakController.pause(for: 3600) }
 
-    // MARK: - About / Purchase
+    // MARK: - Windows
 
-    @objc private func showAbout() {
-        AboutWindowController.show()
-    }
+    @objc private func openSettings() { SettingsWindowController.show() }
+    @objc private func showAbout()    { AboutWindowController.show() }
 
     @objc private func openPurchase() {
-        // Replace this URL with your Mac App Store link once published
         if let url = URL(string: "https://apps.apple.com") {
             NSWorkspace.shared.open(url)
         }
