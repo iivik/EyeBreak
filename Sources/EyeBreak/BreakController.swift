@@ -26,6 +26,7 @@ class BreakController {
 
     var secondsUntilBreakPublic: Int { secondsUntilBreak }
     var isPausedPublic: Bool         { isPaused }
+    var isInBreakPublic: Bool        { isInBreak }
 
     // MARK: - Public
 

@@ -127,6 +127,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.warningBanner.onDelay = { self.breakControllerPublic.delay(by: $0) }
             self.warningBanner.show()
         }
+
+        postureController.isBreakActive = { [weak self] in
+            self?.breakControllerPublic.isInBreakPublic ?? false
+        }
     }
 
     private func observeSettings() {
