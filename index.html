@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Vikas Anand — Own the Grid. Rent the Power.</title>
+  <meta name="description"
+    content="Vikas Anand — Chief Evangelist | VP Sales & Partnerships | Head of Growth. 25+ years in enterprise technology, 100+ enterprise deals, 9 markets. Writing on AI, automation, and the agent economy." />
+  <meta name="author" content="Vikas Anand" />
+  <link rel="canonical" href="https://vikasanand.com/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Vikas Anand — Own the Grid. Rent the Power." />
+  <meta property="og:description"
+    content="Chief Evangelist | VP Sales & Partnerships | Head of Growth. 100+ enterprise deals. 9 markets. Own the Grid." />
+  <meta property="og:url" content="https://vikasanand.com/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:creator" content="@_ivik" />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Non-blocking font load -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </noscript>
+
+  <link rel="stylesheet" href="site.css" />
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #F2EDE0;
+    }
+
+    [data-theme="dark"] html,
+    [data-theme="dark"] body {
+      background: #14110C;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      color-scheme: light dark;
+    }
+
+    #root {
+      min-height: 100vh;
+    }
+    /* Skeleton — visible instantly, hidden once React mounts */
+    #skeleton {
+      position: fixed;
+      inset: 0;
+      background: #F2EDE0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 24px;
+      transition: opacity 0.3s ease;
+    }
+    #skeleton.gone { opacity: 0; pointer-events: none; }
+    .sk-bar { background: rgba(0,0,0,0.07); border-radius: 6px; }
+    .sk-nav { height: 52px; border-radius: 28px; width: 100%; margin-bottom: 32px; }
+    .sk-h1 { height: 52px; width: 80%; margin-bottom: 12px; }
+    .sk-h2 { height: 52px; width: 60%; margin-bottom: 32px; }
+    .sk-tag { height: 32px; width: 70%; border-radius: 20px; }
+    [data-theme="dark"] #skeleton { background: #14110C; }
+    [data-theme="dark"] .sk-bar { background: rgba(255,255,255,0.08); }
+  </style>
+  <script>
+    /* Apply saved theme before body paints so skeleton colour is correct */
+    (function() {
+      var t = localStorage.getItem('gh-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- Instant skeleton — shown while JS loads, fades out when React mounts -->
+  <div id="skeleton">
+    <div class="sk-bar sk-nav"></div>
+    <div class="sk-bar sk-h1"></div>
+    <div class="sk-bar sk-h2"></div>
+    <div class="sk-bar sk-tag"></div>
+  </div>
+  <div id="root"></div>
+
+  <script src="content.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <script src="site.js"></script>
+  <script>
+    // Dismiss skeleton once React has painted
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        var sk = document.getElementById('skeleton');
+        if (sk) { sk.classList.add('gone'); setTimeout(function(){ sk.remove(); }, 350); }
+      });
+    });
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Vikas Anand",
+    "jobTitle": "Chief Evangelist & VP Sales, Partnerships",
+    "worksFor": { "@type": "Organization", "name": "Botminds.ai" },
+    "url": "https://vikasanand.com",
+    "sameAs": [
+      "https://www.linkedin.com/in/vikas-anand/",
+      "https://x.com/_ivik",
+      "https://ivikas.substack.com/",
+      "https://github.com/iivik"
+    ]
+  }
+  </script>
+</body>
+
+</html>

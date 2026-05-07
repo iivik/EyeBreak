@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>EyeBreak — Rest your eyes, every twenty minutes.</title>
+  <meta name="description"
+    content="EyeBreak is a Mac menu bar app that enforces the 20-20-20 eye health rule, gentle posture reminders, and smart call detection. Launching soon on the Mac App Store." />
+  <meta name="author" content="Vikas Anand" />
+  <link rel="canonical" href="https://vikasanand.com/eyebreak" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="EyeBreak — Rest your eyes, every twenty minutes." />
+  <meta property="og:description"
+    content="A quiet Mac menu bar companion. 20-20-20 breaks, posture nudges, smart call detection. Launching soon on the Mac App Store." />
+  <meta property="og:url" content="https://vikasanand.com/eyebreak" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:creator" content="@_ivik" />
+
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </noscript>
+
+  <link rel="stylesheet" href="../site.css" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #F2EDE0; }
+    [data-theme="dark"] html, [data-theme="dark"] body { background: #14110C; }
+    body { font-family: 'Inter', system-ui, sans-serif; color-scheme: light dark; }
+
+    /* ─── EyeBreak page — amber accent overrides ─── */
+    .eb-page {
+      --gh-accent: #C97A4A;
+      --gh-accent-soft: rgba(201, 122, 74, 0.18);
+      --gh-pad: 100px;
+      --gh-pad-x: 88px;
+    }
+    [data-theme="dark"] .eb-page {
+      --gh-accent: #E8A87C;
+      --gh-accent-soft: rgba(232, 168, 124, 0.16);
+    }
+
+    /* Explicit padding so sections never collapse if CSS vars don't cascade */
+    .eb-page .gh-section {
+      padding: 80px 88px;
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    @media (max-width: 1100px) {
+      .eb-page .gh-section { padding: 64px 48px; }
+    }
+    @media (max-width: 720px) {
+      .eb-page .gh-section { padding: 48px 24px; }
+      .eb-hero { padding: 72px 24px 48px !important; }
+      .eb-stage { padding: 0 24px 48px !important; }
+      .eb-close { padding: 48px 24px !important; }
+    }
+
+    .eb-hero {
+      padding: 96px var(--gh-pad-x, 88px) 56px;
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .eb-hero-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gh-mute);
+      margin-bottom: 28px;
+    }
+    .eb-hero-title {
+      font-family: var(--gh-serif);
+      font-weight: 300;
+      letter-spacing: -0.025em;
+      line-height: 1.02;
+      font-size: clamp(56px, 9vw, 116px);
+      margin: 0 0 20px;
+      color: var(--gh-ink);
+    }
+    .eb-hero-title em {
+      font-style: italic;
+      color: var(--gh-accent);
+    }
+    .eb-hero-lede {
+      font-size: clamp(20px, 2.4vw, 26px);
+      line-height: 1.4;
+      color: var(--gh-ink-2);
+      max-width: 620px;
+      margin: 0 0 16px;
+    }
+    .eb-hero-sub {
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--gh-mute);
+      max-width: 560px;
+      margin: 0 0 36px;
+    }
+    .eb-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .eb-cta-soon {
+      cursor: default;
+      opacity: 0.92;
+    }
+
+    /* ─── Mockups ─── */
+    .eb-stage {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px var(--gh-pad-x, 88px) 64px;
+      position: relative;
+      z-index: 1;
+    }
+    .eb-stage-frame {
+      background: linear-gradient(135deg, #1e1a17 0%, #2c2520 100%);
+      background-image:
+        radial-gradient(ellipse at 18% 12%, rgba(232, 168, 124, 0.18) 0%, transparent 48%),
+        radial-gradient(ellipse at 88% 82%, rgba(60, 40, 30, 0.6) 0%, transparent 50%),
+        linear-gradient(135deg, #1e1a17 0%, #2c2520 100%);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow:
+        0 1px 0 rgba(255, 220, 180, 0.06) inset,
+        0 30px 80px -20px rgba(0, 0, 0, 0.45),
+        0 4px 16px rgba(0, 0, 0, 0.18);
+      position: relative;
+      overflow: hidden;
+    }
+    .eb-stage-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      align-items: stretch;
+    }
+    @media (max-width: 880px) {
+      .eb-stage-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Faux desktop with menu bar */
+    .eb-desktop {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 60%, #2a1d14 0%, #0d0806 70%, #050302 100%);
+      min-height: 440px;
+      box-shadow: 0 0 0 0.5px rgba(255, 220, 180, 0.06) inset;
+    }
+    .eb-menubar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 28px;
+      background: rgba(20, 16, 14, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 16px;
+      gap: 14px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      z-index: 3;
+    }
+    .eb-menubar-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: rgba(232, 168, 124, 0.14);
+      color: #f4b88a;
+      font-family: var(--gh-mono);
+      font-size: 11px;
+    }
+    .eb-eye {
+      width: 14px; height: 14px;
+      display: inline-block;
+    }
+
+    /* Break screen overlay (the central visual) */
+    .eb-break {
+      position: absolute;
+      inset: 28px;
+      top: 56px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #f4ead9;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      gap: 16px;
+    }
+    .eb-break-kicker {
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #d9925f;
+      font-weight: 600;
+    }
+    .eb-break-headline {
+      font-family: var(--gh-serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(32px, 4.6vw, 54px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      max-width: 520px;
+      color: #f4ead9;
+    }
+    .eb-break-headline em {
+      color: #f4b88a;
+      font-style: italic;
+    }
+    .eb-break-count {
+      font-family: var(--gh-mono);
+      font-size: 64px;
+      font-weight: 300;
+      color: rgba(244, 234, 217, 0.85);
+      letter-spacing: -0.04em;
+      margin-top: 4px;
+    }
+    .eb-break-stats {
+      display: flex;
+      gap: 18px;
+      margin-top: 24px;
+      font-size: 12px;
+      color: rgba(244, 234, 217, 0.5);
+    }
+    .eb-break-stats span strong {
+      color: rgba(244, 234, 217, 0.85);
+      font-weight: 500;
+    }
+
+    /* Popover with activity rings */
+    .eb-popover {
+      background: #1a1613;
+      border-radius: 14px;
+      padding: 22px 22px 18px;
+      color: #f4ead9;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+      box-shadow:
+        0 0 0 0.5px rgba(255, 220, 180, 0.08) inset,
+        0 20px 60px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .eb-pop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .eb-pop-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f4ead9;
+      letter-spacing: -0.005em;
+    }
+    .eb-pop-meta {
+      font-size: 11px;
+      color: rgba(244, 234, 217, 0.45);
+      font-family: var(--gh-mono);
+    }
+    .eb-rings-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .eb-rings-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+    .eb-stat-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: rgba(244, 234, 217, 0.7);
+    }
+    .eb-stat-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+    }
+    .eb-stat-line strong {
+      color: #f4ead9;
+      font-weight: 600;
+      font-family: var(--gh-mono);
+    }
+    .eb-pop-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-top: 0.5px solid rgba(255, 220, 180, 0.08);
+      padding-top: 14px;
+    }
+    .eb-pop-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: rgba(244, 234, 217, 0.78);
+      padding: 6px 0;
+    }
+    .eb-pop-row span:last-child {
+      color: rgba(244, 234, 217, 0.42);
+      font-family: var(--gh-mono);
+      font-size: 11px;
+    }
+    .eb-pop-insight {
+      font-size: 11.5px;
+      font-style: italic;
+      color: rgba(244, 234, 217, 0.55);
+      line-height: 1.5;
+      padding-top: 4px;
+    }
+
+    .eb-stage-caption {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--gh-mute);
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── Narrow sections: heading + content share the same column ─── */
+    .eb-section-narrow .gh-sec-h,
+    .eb-section-narrow .eb-desc,
+    .eb-section-narrow .eb-why {
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ─── Description ─── */
+    .eb-desc {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 36px 40px;
+    }
+    .eb-desc p {
+      font-size: 18px;
+      line-height: 1.65;
+      color: var(--gh-ink-2);
+    }
+    .eb-desc p + p { margin-top: 16px; }
+
+    /* ─── Features grid ─── */
+    .eb-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .eb-feature {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .eb-feature-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      background: var(--gh-accent-soft);
+      color: var(--gh-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+    .eb-feature h3 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      margin: 0;
+      color: var(--gh-ink);
+    }
+    .eb-feature p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--gh-ink-2);
+      margin: 0;
+    }
+
+    /* ─── Free vs Paid ─── */
+    .eb-tiers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 720px) {
+      .eb-tiers { grid-template-columns: 1fr; }
+    }
+    .eb-tier {
+      padding: 28px;
+    }
+    .eb-tier-kicker {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--gh-mute);
+      margin-bottom: 10px;
+    }
+    .eb-tier-name {
+      font-family: var(--gh-serif);
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.015em;
+      margin: 0 0 18px;
+      color: var(--gh-ink);
+    }
+    .eb-tier-name em {
+      color: var(--gh-accent);
+      font-style: italic;
+    }
+    .eb-tier ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .eb-tier li {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--gh-ink-2);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .eb-tier li::before {
+      content: "·";
+      color: var(--gh-accent);
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1;
+      transform: translateY(2px);
+    }
+
+    /* ─── Why ─── */
+    .eb-why {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 36px;
+    }
+    .eb-why p {
+      font-size: 18px;
+      line-height: 1.65;
+      font-family: var(--gh-serif);
+      font-weight: 400;
+      color: var(--gh-ink-2);
+      margin: 0 0 14px;
+    }
+    .eb-why p:last-child { margin-bottom: 0; }
+    .eb-why .eb-sig {
+      font-size: 13px;
+      font-style: italic;
+      color: var(--gh-mute);
+      margin-top: 22px;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* ─── Closing ─── */
+    .eb-close {
+      text-align: center;
+      padding: 64px var(--gh-pad-x, 88px);
+      position: relative;
+      z-index: 1;
+    }
+    .eb-close h2 {
+      font-family: var(--gh-serif);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      font-size: clamp(36px, 5vw, 64px);
+      margin: 0 0 14px;
+      color: var(--gh-ink);
+    }
+    .eb-close h2 em { color: var(--gh-accent); font-style: italic; }
+    .eb-close p {
+      color: var(--gh-mute);
+      font-size: 16px;
+      margin: 0 0 28px;
+    }
+    .eb-close .eb-cta-row { justify-content: center; }
+  </style>
+  <script>
+    (function () {
+      var t = localStorage.getItem('va-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+
+<body>
+  <div class="gh-root gh-airy eb-page">
+    <!-- Ambient backdrop -->
+    <div class="gh-bg" aria-hidden="true">
+      <div class="gh-blob gh-blob-1"></div>
+      <div class="gh-blob gh-blob-2"></div>
+      <div class="gh-blob gh-blob-3"></div>
+      <div class="gh-grain"></div>
+    </div>
+
+    <!-- Top bar -->
+    <header class="gh-top">
+      <div class="gh-glass gh-top-inner">
+        <a href="/" class="gh-brand">
+          <img src="../vikas-wordmark-small.png" class="gh-wordmark" alt="Vikas Anand" />
+          <span class="gh-brand-name">Vikas Anand</span>
+        </a>
+        <nav class="gh-nav">
+          <a href="/">← vikasanand.com</a>
+          <a href="/#workshop">The Workshop</a>
+          <a href="/#field-notes">Field Notes</a>
+          <button type="button" class="gh-theme-link" id="eb-theme-toggle" aria-label="Toggle theme">Dark</button>
+        </nav>
+        <a href="https://github.com/iivik/EyeBreak" target="_blank" rel="noopener noreferrer" class="gh-cta">Source on GitHub ↗</a>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="eb-hero" id="top">
+      <div class="eb-hero-meta">
+        <span class="gh-pulse"></span> macOS · menu bar · launching soon
+      </div>
+      <h1 class="eb-hero-title">
+        Rest your <em>eyes,</em><br />
+        every twenty <em>minutes.</em>
+      </h1>
+      <p class="eb-hero-lede">
+        EyeBreak is a quiet Mac menu bar companion that protects your eyes, your back, and your focus — without getting in the way.
+      </p>
+      <p class="eb-hero-sub">
+        20-20-20 breaks. Gentle posture nudges. Smart enough to stay silent when you're on a call or presenting. Coming soon to the Mac App Store.
+      </p>
+      <div class="eb-cta-row">
+        <a class="gh-cta gh-cta-lg eb-cta-soon" aria-disabled="true">Coming soon to the Mac App Store</a>
+        <a class="gh-cta gh-cta-lg gh-cta-ghost" href="https://github.com/iivik/EyeBreak" target="_blank" rel="noopener noreferrer">View source on GitHub ↗</a>
+      </div>
+    </section>
+
+    <!-- The visual -->
+    <section class="eb-stage">
+      <div class="eb-stage-frame">
+        <div class="eb-stage-grid">
+          <!-- Faux desktop with menu bar + break screen -->
+          <div class="eb-desktop">
+            <div class="eb-menubar">
+              <span class="eb-menubar-pill">
+                <svg class="eb-eye" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.6"/>
+                  <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                </svg>
+                12m
+              </span>
+              <span>Wed 16:24</span>
+            </div>
+            <div class="eb-break">
+              <div class="eb-break-kicker">EYEBREAK · LOOK AWAY</div>
+              <div class="eb-break-headline">
+                Look at something <em>twenty feet</em> away for twenty seconds.
+              </div>
+              <div class="eb-break-count">00:13</div>
+              <div class="eb-break-stats">
+                <span><strong>7</strong> breaks today</span>
+                <span><strong>🔥 5</strong>-day streak</span>
+                <span><strong>2m 20s</strong> rested</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Popover -->
+          <div class="eb-popover">
+            <div class="eb-pop-header">
+              <div class="eb-pop-title">EyeBreak</div>
+              <div class="eb-pop-meta">next · 12m</div>
+            </div>
+
+            <div class="eb-rings-row">
+              <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+                <!-- Outer ring (week) -->
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(232,168,124,0.14)" stroke-width="8"/>
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#e8a87c" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="326.7" stroke-dashoffset="98" transform="rotate(-90 60 60)"/>
+                <!-- Middle ring (today) -->
+                <circle cx="60" cy="60" r="40" fill="none" stroke="rgba(150,200,140,0.14)" stroke-width="8"/>
+                <circle cx="60" cy="60" r="40" fill="none" stroke="#9bcb8f" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="251.3" stroke-dashoffset="63" transform="rotate(-90 60 60)"/>
+                <!-- Inner ring (rested) -->
+                <circle cx="60" cy="60" r="28" fill="none" stroke="rgba(130,180,220,0.14)" stroke-width="8"/>
+                <circle cx="60" cy="60" r="28" fill="none" stroke="#7fb6df" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="175.9" stroke-dashoffset="44" transform="rotate(-90 60 60)"/>
+                <!-- Center -->
+                <text x="60" y="65" text-anchor="middle" fill="#f4ead9" font-family="ui-monospace, monospace" font-size="14" font-weight="500">12m</text>
+              </svg>
+              <div class="eb-rings-stats">
+                <div class="eb-stat-line"><span class="eb-stat-dot" style="background:#e8a87c"></span> Week · <strong>4/5</strong></div>
+                <div class="eb-stat-line"><span class="eb-stat-dot" style="background:#9bcb8f"></span> Today · <strong>7/12</strong></div>
+                <div class="eb-stat-line"><span class="eb-stat-dot" style="background:#7fb6df"></span> Rested · <strong>2:20</strong></div>
+              </div>
+            </div>
+
+            <div class="eb-pop-actions">
+              <div class="eb-pop-row"><span>Take a break now</span><span>⌘B</span></div>
+              <div class="eb-pop-row"><span>Skip · add 5 min</span><span>⌘⇧S</span></div>
+              <div class="eb-pop-row"><span>Settings…</span><span>⌘,</span></div>
+            </div>
+
+            <div class="eb-pop-insight">
+              "Every 20 minutes, look at something 20 feet away for 20 seconds."
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="eb-stage-caption">Menu bar countdown · break screen · activity rings popover</div>
+    </section>
+
+    <!-- What it does -->
+    <section class="gh-section eb-section-narrow" id="what">
+      <div class="gh-sec-h">
+        <span class="gh-eyebrow">What it does</span>
+        <h2>A small, <em>quiet</em> guardian<br />for the eyes you stare with all day.</h2>
+      </div>
+      <div class="gh-glass eb-desc">
+        <p>
+          EyeBreak lives in your menu bar and counts down quietly. Every twenty minutes it asks you to look up — at something twenty feet away, for twenty seconds. The full screen dims to a warm, low-glare overlay; a soft tone plays; a countdown ticks. Then it gets out of your way.
+        </p>
+        <p>
+          Every ten minutes, a smaller nudge reminds you to sit up straight. EyeBreak knows when you're on a call or presenting — mic, camera, screen-share, all detected — and stays silent during meetings. You can skip a break, add five minutes if you're mid-thought, or change the cadence to whatever your body actually wants.
+        </p>
+        <p>
+          It's the kind of utility you stop noticing after a week. Then your eyes stop hurting at 4pm and you wonder why.
+        </p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="gh-section" id="features">
+      <div class="gh-sec-h">
+        <span class="gh-eyebrow">Features</span>
+        <h2>Built for <em>real</em> work days.</h2>
+      </div>
+      <div class="eb-features">
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3>The 20-20-20 rule</h3>
+          <p>Every 20 minutes, look 20 feet away for 20 seconds. The eye-care standard, automated.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M12 4v8M9 8l3-3 3 3M5 16h14M7 20h10"/>
+            </svg>
+          </div>
+          <h3>Posture nudges</h3>
+          <p>Every 10 minutes, a small reminder to sit up straight. Off by default during calls.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 6h12v8H4z M16 9h4v5h-4z M2 18h20"/>
+            </svg>
+          </div>
+          <h3>Smart call detection</h3>
+          <p>Mic, camera, and screen-share are all sensed. EyeBreak stays silent when you're presenting.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M5 12l5 5L20 7"/>
+            </svg>
+          </div>
+          <h3>Skip · or add 5 minutes</h3>
+          <p>One click to defer. EyeBreak reminds, it doesn't lock you out of your own work.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <h3>Activity rings & streaks</h3>
+          <p>Apple-Watch-style rings for week consistency, daily breaks, and minutes rested. With streaks.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M12 21s-7-4.35-7-10a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.65-7 10-7 10z"/>
+            </svg>
+          </div>
+          <h3>Apple Health integration</h3>
+          <p>Mindful minutes from each completed break sync to Apple Health, so the rest counts where it matters.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 7v5l3 2"/>
+            </svg>
+          </div>
+          <h3>Custom intervals</h3>
+          <p>20 minutes is the default; pick anything. Same for the hourly posture cadence.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M3 12a9 9 0 0 1 18 0M7 12a5 5 0 0 1 10 0M11 12a1 1 0 1 1 2 0"/>
+            </svg>
+          </div>
+          <h3>Soothing tones</h3>
+          <p>A synthesized flute melody, or a small bell. Pick the one that fits your room.</p>
+        </article>
+        <article class="gh-glass eb-feature">
+          <div class="eb-feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="4" width="16" height="16" rx="3"/>
+              <path d="M9 12h6M9 8h6M9 16h4"/>
+            </svg>
+          </div>
+          <h3>7-day full trial</h3>
+          <p>The whole app, free, for a week. No card. The trial nudges, never blocks.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Free vs Paid -->
+    <section class="gh-section" id="tiers">
+      <div class="gh-sec-h">
+        <span class="gh-eyebrow">Free or unlocked</span>
+        <h2>Always useful. <em>More</em> useful unlocked.</h2>
+      </div>
+      <div class="eb-tiers">
+        <div class="gh-glass eb-tier">
+          <div class="eb-tier-kicker">Free · forever</div>
+          <h3 class="eb-tier-name">The <em>basics.</em></h3>
+          <ul>
+            <li>Menu bar countdown</li>
+            <li>Manual break trigger from the popover</li>
+            <li>Smart call & screen-share detection</li>
+            <li>Idle detection (no breaks while you're away)</li>
+            <li>Your settings stay yours — never reset</li>
+          </ul>
+        </div>
+        <div class="gh-glass eb-tier">
+          <div class="eb-tier-kicker">Unlocked · one-time purchase</div>
+          <h3 class="eb-tier-name">The <em>full</em> companion.</h3>
+          <ul>
+            <li>Full break overlay with countdown and chime</li>
+            <li>Posture reminders</li>
+            <li>Activity rings, streaks, mindful-minute history</li>
+            <li>Apple Health sync — mindful minutes per break</li>
+            <li>Custom break and posture intervals</li>
+            <li>Post-break reward banners</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why -->
+    <section class="gh-section eb-section-narrow" id="why">
+      <div class="gh-sec-h">
+        <span class="gh-eyebrow">Why I built it</span>
+        <h2>Because my <em>eyes</em> kept telling me.</h2>
+      </div>
+      <div class="gh-glass eb-why">
+        <p>
+          I stare at screens longer than I admit to. The 20-20-20 rule has been around forever, but every app I tried either nagged me through meetings, looked like a 2014 Windows utility, or locked me out of my own laptop. So I built the one I wanted: warm, quiet, Mac-native, smart enough to know when to shut up.
+        </p>
+        <p>
+          EyeBreak is the small, calm thing in the corner that's been quietly looking out for me all day. I hope it does the same for you.
+        </p>
+        <p class="eb-sig">— Vikas</p>
+      </div>
+    </section>
+
+    <!-- Closing CTA -->
+    <section class="eb-close">
+      <h2>Coming <em>soon</em> to the Mac App Store.</h2>
+      <p>Submission in progress. The source is already on GitHub if you'd like a head start.</p>
+      <div class="eb-cta-row">
+        <a class="gh-cta gh-cta-lg eb-cta-soon" aria-disabled="true">Launching soon · App Store</a>
+        <a class="gh-cta gh-cta-lg gh-cta-ghost" href="https://github.com/iivik/EyeBreak" target="_blank" rel="noopener noreferrer">View source on GitHub ↗</a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gh-foot">
+      <div class="gh-foot-left">
+        <a href="/" class="gh-foot-link">vikasanand.com<span class="gh-foot-handle">Back to home</span></a>
+        <a href="/#workshop" class="gh-foot-link">The Workshop<span class="gh-foot-handle">More projects</span></a>
+      </div>
+      <div class="gh-foot-copy">© 2026 Vikas Anand. EyeBreak.</div>
+      <div class="gh-foot-right">
+        <a href="/eyebreak/privacy" class="gh-foot-link">Privacy</a>
+        <a href="/eyebreak/terms" class="gh-foot-link">Terms</a>
+        <a href="https://github.com/iivik/EyeBreak" target="_blank" rel="noopener noreferrer" class="gh-foot-link">GitHub<span class="gh-foot-handle">iivik/EyeBreak</span></a>
+      </div>
+    </footer>
+  </div>
+  <script>
+    (function () {
+      var btn = document.getElementById('eb-theme-toggle');
+      var sync = function () {
+        var t = document.documentElement.getAttribute('data-theme') || 'light';
+        if (btn) btn.textContent = t === 'dark' ? 'Light' : 'Dark';
+      };
+      sync();
+      if (btn) {
+        btn.addEventListener('click', function () {
+          var cur = document.documentElement.getAttribute('data-theme') || 'light';
+          var next = cur === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          document.documentElement.style.colorScheme = next;
+          try { localStorage.setItem('va-theme', next); } catch (e) {}
+          sync();
+        });
+      }
+    })();
+  </script>
+</body>
+
+</html>
