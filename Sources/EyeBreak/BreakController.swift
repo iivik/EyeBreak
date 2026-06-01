@@ -3,26 +3,27 @@ import AppKit
 import CoreGraphics
 
 class BreakController {
-    var onStatusUpdate: ((String) -> Void)?
-    var onWarning: (() -> Void)?           // fires at T-60 seconds
+    var onStatusUpdate:  ((String) -> Void)?
+    var onWarning:       (() -> Void)?       // fires at T-60 seconds
+    var onBreakComplete: (() -> Void)?       // fires after every completed break
 
     private let callRetryInterval: TimeInterval = 60
     private let idleCheckInterval: TimeInterval = 5
 
-    private var ticker: Timer?
-    private var idleTimer: Timer?
+    private var ticker:            Timer?
+    private var idleTimer:         Timer?
     private var secondsUntilBreak: Int = 0
     private var isPaused   = false
     private var skipNext   = false
     private var isIdle     = false
     private var isInBreak  = false
-    private var warnFired  = false         // so we fire the warning only once per cycle
+    private var warnFired  = false
 
     private let overlay      = OverlayWindowController()
     private let callDetector = CallDetector()
     private let audio        = AudioPlayer()
 
-    // MARK: - Public Accessors (for status pill)
+    // MARK: - Public Accessors
 
     var secondsUntilBreakPublic: Int { secondsUntilBreak }
     var isPausedPublic: Bool         { isPaused }
@@ -87,12 +88,19 @@ class BreakController {
         secondsUntilBreak -= 1
 
         if secondsUntilBreak == 60 && !warnFired {
+            // Decide at the one-minute mark, before any warning fires: if the user is on a
+            // call / sharing their screen, don't warn and don't break — silently restart the
+            // interval and re-check at the next one-minute mark.
+            if callDetector.isOnCall() {
+                onStatusUpdate?("CALL…")
+                resetTicker()
+                return
+            }
             warnFired = true
             onWarning?()
             NotificationManager.shared.postBreakWarning()
         }
 
-        // Format: "Xm" when >60s, "Xs" when ≤60s
         let statusText: String
         if secondsUntilBreak > 60 {
             statusText = "\(secondsUntilBreak / 60)m"
@@ -103,11 +111,7 @@ class BreakController {
 
         if secondsUntilBreak <= 0 {
             ticker?.invalidate()
-            // If breaks are disabled, just reset without triggering overlay
-            guard AppSettings.shared.breakEnabled else {
-                resetTicker()
-                return
-            }
+            guard AppSettings.shared.breakEnabled else { resetTicker(); return }
             handleBreakTime()
         }
     }
@@ -121,12 +125,10 @@ class BreakController {
             return
         }
 
-        // Respect Do Not Disturb / Focus mode
         if AppSettings.shared.respectDnD && NotificationManager.shared.isDNDActive() {
             onStatusUpdate?("DND…")
             DispatchQueue.main.asyncAfter(deadline: .now() + callRetryInterval) { [weak self] in
                 guard let self else { return }
-                // Re-check after 1 min — if still in DND, reset the full timer
                 if AppSettings.shared.respectDnD && NotificationManager.shared.isDNDActive() {
                     self.resetTicker()
                 } else {
@@ -149,16 +151,28 @@ class BreakController {
     }
 
     private func executeBreak() {
+        // Paywall: trial expired → notification only, no overlay, no stats recorded
+        if TrialManager.shared.isTrialExpired {
+            NotificationManager.shared.postExpiredBreakReminder()
+            resetTicker()
+            return
+        }
+
         isInBreak = true
         onStatusUpdate?("REST")
         audio.mode = AppSettings.shared.soundMode
         audio.start()
 
         let dur = AppSettings.shared.breakDuration
-        overlay.show(duration: dur) {
+        let breakStart = Date()
+        overlay.show(duration: dur) { [weak self] in
+            guard let self else { return }
+            let breakEnd = Date()
             StatsManager.shared.recordBreak(durationSec: dur)
+            HealthKitManager.shared.logMindfulSession(start: breakStart, end: breakEnd)
             self.audio.stop()
             self.isInBreak = false
+            self.onBreakComplete?()
             if !self.isIdle { self.resetTicker() }
         }
     }
@@ -176,14 +190,13 @@ class BreakController {
     private func checkIdle() {
         guard !isPaused else { return }
 
-        let sysIdle = secondsSinceLastUserEvent()
+        let sysIdle   = secondsSinceLastUserEvent()
         let threshold = AppSettings.shared.idleThreshold
 
         if !isIdle && sysIdle >= threshold {
             isIdle = true
             ticker?.invalidate()
             if !isInBreak { onStatusUpdate?("IDLE") }
-
         } else if isIdle && sysIdle < idleCheckInterval * 2 {
             isIdle = false
             if !isInBreak { resetTicker() }
