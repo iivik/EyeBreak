@@ -1,4 +1,7 @@
 .build/
+build/
+DerivedData/
+*.xcarchive
 .swiftpm/
 *.o
 *.d
