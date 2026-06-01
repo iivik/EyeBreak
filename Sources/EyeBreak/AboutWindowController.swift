@@ -14,7 +14,7 @@ class AboutWindowController: NSWindowController {
 
     init() {
         let win = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 340, height: 370),
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 430),
             styleMask:   [.titled, .closable, .fullSizeContentView],
             backing:     .buffered,
             defer:       false
@@ -24,7 +24,7 @@ class AboutWindowController: NSWindowController {
         win.isMovableByWindowBackground = true
         win.appearance = NSAppearance(named: .darkAqua)
         win.center()
-        win.title = "About EyeBreak"
+        win.title = "About IrisBreak"
         super.init(window: win)
         buildContent()
     }
@@ -39,44 +39,36 @@ class AboutWindowController: NSWindowController {
         view.wantsLayer = true
         view.layer?.backgroundColor = theme.bg.cgColor
 
-        // Subtle top-glow: amber radial from top-centre
         let glowLayer = CAGradientLayer()
-        glowLayer.type        = .radial
-        glowLayer.colors      = [theme.accent.withAlphaComponent(0.10).cgColor, NSColor.clear.cgColor]
-        glowLayer.startPoint  = CGPoint(x: 0.5, y: 0.5)
-        glowLayer.endPoint    = CGPoint(x: 1.0, y: 1.0)
-        glowLayer.frame       = CGRect(x: 340/2 - 160, y: 370 - 120, width: 320, height: 200)
+        glowLayer.type       = .radial
+        glowLayer.colors     = [theme.accent.withAlphaComponent(0.10).cgColor, NSColor.clear.cgColor]
+        glowLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+        glowLayer.endPoint   = CGPoint(x: 1.0, y: 1.0)
+        glowLayer.frame      = CGRect(x: 340/2 - 160, y: 430 - 120, width: 320, height: 200)
         view.layer?.addSublayer(glowLayer)
 
-        // ── Eye glyph (custom Ember version)
         let eye = EyeGlyphView(glyphSize: 44, color: theme.accent)
         view.addSubview(eye)
 
-        // ── App name
-        let nameLabel = emberLabel("EyeBreak", size: 26, weight: .light, color: theme.text)
+        let nameLabel = emberLabel("IrisBreak", size: 26, weight: .light, color: theme.text)
         view.addSubview(nameLabel)
 
-        // ── Version (secret: 5 taps → dev code)
         let version  = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0"
         let buildNum = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        let versionLabel = TapTextField(labelWithString: "v\(version) (\(buildNum))")
+        let versionLabel = NSTextField(labelWithString: "v\(version) (\(buildNum))")
         versionLabel.font      = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
         versionLabel.textColor = theme.textDim
         versionLabel.alignment = .center
         versionLabel.translatesAutoresizingMaskIntoConstraints = false
-        versionLabel.onFiveTaps = { [weak self] in self?.promptDevCode() }
         view.addSubview(versionLabel)
 
-        // ── Divider
         let divLine = divider(theme: theme)
         view.addSubview(divLine)
 
-        // ── Tagline
         let tagline = emberLabel("The 20-20-20 rule for eye health.",
                                   size: 12, weight: .regular, color: theme.textMuted)
         view.addSubview(tagline)
 
-        // ── Description
         let desc = emberLabel(
             "Every 20 minutes, look at something\n20 feet away for 20 seconds.",
             size: 11, weight: .regular, color: theme.textDim)
@@ -85,7 +77,7 @@ class AboutWindowController: NSWindowController {
         (desc.cell as? NSTextFieldCell)?.wraps = true
         view.addSubview(desc)
 
-        // ── Status
+        // Status / purchase CTA
         let trial = TrialManager.shared
         let (statusText, statusColor): (String, NSColor)
         if trial.isPurchased {
@@ -95,28 +87,40 @@ class AboutWindowController: NSWindowController {
             statusText  = "Free trial · \(trial.daysRemaining) day\(trial.daysRemaining == 1 ? "" : "s") left"
             statusColor = theme.accent
         } else {
-            statusText  = "Trial expired · Purchase to continue"
+            statusText  = "Trial expired"
             statusColor = NSColor(calibratedRed: 1.0, green: 0.45, blue: 0.40, alpha: 1)
         }
         let statusLabel = emberLabel(statusText, size: 11, weight: .medium, color: statusColor)
         view.addSubview(statusLabel)
 
-        // ── Author / links
+        // Purchase / restore buttons (visible when not purchased)
+        let purchaseBtn = NSButton(title: "Unlock IrisBreak — $4.99", target: self, action: #selector(purchaseTapped))
+        purchaseBtn.isBordered       = false
+        purchaseBtn.contentTintColor = theme.accent
+        purchaseBtn.font             = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        purchaseBtn.isHidden         = trial.isPurchased
+        purchaseBtn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(purchaseBtn)
+
+        let restoreBtn = NSButton(title: "Restore purchase", target: self, action: #selector(restoreTapped))
+        restoreBtn.isBordered       = false
+        restoreBtn.contentTintColor = theme.textMuted
+        restoreBtn.font             = NSFont.systemFont(ofSize: 11, weight: .regular)
+        restoreBtn.isHidden         = trial.isPurchased
+        restoreBtn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(restoreBtn)
+
         let authorLabel = emberLabel("by Vikas Anand", size: 11, weight: .regular, color: theme.textDim)
         view.addSubview(authorLabel)
 
-        let websiteBtn = linkButton("vikasanand.com",   url: "https://vikasanand.com", theme: theme)
-        let emailBtn   = linkButton("sakivva@gmail.com", url: "mailto:sakivva@gmail.com", theme: theme)
+        let websiteBtn = linkButton("vikasanand.com/irisbreak", url: "https://www.vikasanand.com/irisbreak", theme: theme)
         view.addSubview(websiteBtn)
-        view.addSubview(emailBtn)
 
-        // ── Copyright
         let year = Calendar.current.component(.year, from: Date())
         let copy = emberLabel("© \(year) Vikas Anand", size: 10, weight: .regular,
                                color: theme.textDim.withAlphaComponent(0.5))
         view.addSubview(copy)
 
-        // ── Constraints
         NSLayoutConstraint.activate([
             eye.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             eye.topAnchor.constraint(equalTo: view.topAnchor, constant: 48),
@@ -143,18 +147,31 @@ class AboutWindowController: NSWindowController {
             statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             statusLabel.topAnchor.constraint(equalTo: desc.bottomAnchor, constant: 18),
 
+            purchaseBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            purchaseBtn.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 12),
+
+            restoreBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            restoreBtn.topAnchor.constraint(equalTo: purchaseBtn.bottomAnchor, constant: 2),
+
             authorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            authorLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
+            authorLabel.topAnchor.constraint(equalTo: restoreBtn.bottomAnchor, constant: 16),
 
             websiteBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             websiteBtn.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 5),
 
-            emailBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emailBtn.topAnchor.constraint(equalTo: websiteBtn.bottomAnchor, constant: 3),
-
             copy.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             copy.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -14),
         ])
+    }
+
+    // MARK: - Purchase Actions
+
+    @objc private func purchaseTapped() {
+        Task { try? await PurchaseManager.shared.purchase() }
+    }
+
+    @objc private func restoreTapped() {
+        Task { try? await PurchaseManager.shared.restore() }
     }
 
     // MARK: - Helpers
@@ -190,42 +207,5 @@ class AboutWindowController: NSWindowController {
         guard let urlString = sender.identifier?.rawValue,
               let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
-    }
-
-    // MARK: - Dev bypass
-
-    private func promptDevCode() {
-        guard let win = window else { return }
-        let alert = NSAlert()
-        alert.messageText     = "Developer Access"
-        alert.informativeText = "Enter developer code to unlock:"
-        alert.addButton(withTitle: "Unlock")
-        alert.addButton(withTitle: "Cancel")
-
-        let field = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
-        field.placeholderString = "Code"
-        alert.accessoryView = field
-
-        alert.beginSheetModal(for: win) { response in
-            guard response == .alertFirstButtonReturn else { return }
-            if field.stringValue == "VIKAS-EYEBREAK-DEV" {
-                TrialManager.shared.isPurchased = true
-                let ok = NSAlert()
-                ok.messageText    = "Unlocked"
-                ok.informativeText = "Developer mode active. Trial removed."
-                ok.runModal()
-            }
-        }
-    }
-}
-
-// MARK: - Tap-counting label
-
-private class TapTextField: NSTextField {
-    var onFiveTaps: (() -> Void)?
-    private var count = 0
-    override func mouseDown(with event: NSEvent) {
-        count += 1
-        if count >= 5 { count = 0; onFiveTaps?() }
     }
 }

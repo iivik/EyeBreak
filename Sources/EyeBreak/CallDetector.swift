@@ -1,20 +1,25 @@
 import AppKit
 import CoreAudio
 import CoreMediaIO
+import CoreGraphics
 
-/// Detects whether the user is on a call or sharing their screen.
+/// Detects whether the user is on a call, sharing their screen, or presenting.
 ///
 /// Detection signals (any one is enough to block a break):
-///   1. Screen sharing active  — Zoom's CptHost helper process, or macOS ScreenSharing app
-///   2. Camera in use          — CoreMediaIO device query (camera on = video call)
-///   3. Microphone in use      — CoreAudio device query (existing, catches audio-only calls)
+///   1. Screen sharing active  — Zoom CptHost, macOS session being shared remotely, Screen Sharing viewer
+///   2. Presentation active    — AirPlay/display mirroring, or Keynote/PowerPoint running while mirroring
+///   3. Camera in use          — CoreMediaIO device query (camera on = video call)
+///   4. Microphone in use      — CoreAudio device query (catches audio-only calls)
 ///
-/// Signals 2 & 3 are gated on a known conferencing app being open to avoid false
-/// positives (e.g. a podcast playing in a browser, or FaceTime in the dock but idle).
+/// Signals 3 & 4 are gated on a known conferencing app (browsers excluded — too many
+/// false positives from WebRTC warmup). Presentation detection requires a full-screen
+/// window from Keynote/PowerPoint, not just the app running or display mirroring active.
 class CallDetector {
 
     // MARK: - Known conferencing apps
 
+    // Used only for the camera check — browsers removed because mic detection now
+    // tracks the orange-dot indicator directly and handles browser calls without gating.
     private let callApps: Set<String> = [
         "us.zoom.xos",                 // Zoom
         "com.microsoft.teams",         // Microsoft Teams (classic)
@@ -25,9 +30,6 @@ class CallDetector {
         "com.skype.skype",             // Skype
         "com.discord",                 // Discord
         "com.loom.desktop",            // Loom
-        "com.google.Chrome",           // Google Meet / browser calls
-        "org.mozilla.firefox",         // Firefox browser calls
-        "com.apple.Safari",            // Safari browser calls
         "com.bluejeans.BlueJeans",     // BlueJeans
         "com.ringcentral.RingCentral", // RingCentral
         "com.whereby.Whereby",         // Whereby
@@ -37,13 +39,10 @@ class CallDetector {
 
     /// Returns true when a break should be skipped.
     func isOnCall() -> Bool {
-        // Screen sharing is a definitive signal — no need to check anything else.
         if isScreenSharingActive() { return true }
+        if isPresentationActive()  { return true }
 
-        // For hardware signals, require a known conf app to be open.
         guard isConferenceAppRunning() else { return false }
-
-        // Mic muted but camera on (presenting/watching), or audio-only call with mic live.
         return isMicrophoneBeingUsed() || isCameraBeingUsed()
     }
 
@@ -53,12 +52,55 @@ class CallDetector {
         let running = NSWorkspace.shared.runningApplications
 
         for app in running {
-            // Zoom spawns a separate "CptHost" process while screen-sharing.
-            // This runs even when the presenter's mic is muted.
+            // Zoom spawns "CptHost" while screen-sharing, even when mic is muted.
             if app.localizedName == "CptHost" { return true }
 
-            // macOS built-in Screen Sharing app
+            // User is viewing another Mac via the built-in Screen Sharing viewer.
             if app.bundleIdentifier == "com.apple.ScreenSharing" { return true }
+        }
+
+        // macOS native Screen Sharing: another machine is actively viewing this Mac.
+        // CGSSessionScreenIsShared is set in the session dict when screensharingd has a live connection.
+        if let dict = CGSessionCopyCurrentDictionary() as? [String: Any] {
+            if let val = dict["CGSSessionScreenIsShared"] as? Int, val != 0 { return true }
+            if let val = dict["CGSSessionScreenIsShared"] as? Bool, val        { return true }
+        }
+
+        return false
+    }
+
+    // MARK: - Presentation mode
+
+    private let presentationApps: Set<String> = [
+        "com.apple.iWork.Keynote",
+        "com.microsoft.Powerpoint",
+    ]
+
+    private func isPresentationActive() -> Bool {
+        // Only block if a presentation app has a window that fills an entire screen.
+        // "Running + mirroring/multiple-screens" was too broad: it triggered when the app
+        // was open in edit mode, or when AirPlay mirroring was active for unrelated reasons.
+        let presentationPIDs = Set(
+            NSWorkspace.shared.runningApplications
+                .filter { $0.bundleIdentifier.map { presentationApps.contains($0) } ?? false }
+                .map { $0.processIdentifier }
+        )
+        guard !presentationPIDs.isEmpty else { return false }
+
+        guard let windows = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID
+        ) as? [[String: Any]] else { return false }
+
+        let screenSizes = NSScreen.screens.map { $0.frame.size }
+
+        for win in windows {
+            guard let pid = win[kCGWindowOwnerPID as String] as? pid_t,
+                  presentationPIDs.contains(pid),
+                  let bounds = win[kCGWindowBounds as String] as? [String: Any],
+                  let w = bounds["Width"] as? CGFloat,
+                  let h = bounds["Height"] as? CGFloat else { continue }
+            let winSize = CGSize(width: w, height: h)
+            if screenSizes.contains(where: { $0.width == winSize.width && $0.height == winSize.height }) { return true }
         }
         return false
     }
@@ -82,7 +124,6 @@ class CallDetector {
             mScope:    kAudioObjectPropertyScopeGlobal,
             mElement:  kAudioObjectPropertyElementMain
         )
-
         guard AudioObjectGetPropertyData(
             AudioObjectID(kAudioObjectSystemObject),
             &getAddr, 0, nil, &size, &deviceID

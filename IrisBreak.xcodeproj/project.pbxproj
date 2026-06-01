@@ -1,0 +1,411 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		000000000000000000000040 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000033 /* Assets.xcassets */; };
+		000000000000000000000041 /* AudioSafe.m in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000034 /* AudioSafe.m */; };
+		000000000000000000000200 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000100 /* AboutWindowController.swift */; };
+		000000000000000000000201 /* ActivityRingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000101 /* ActivityRingsView.swift */; };
+		000000000000000000000202 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000102 /* AppDelegate.swift */; };
+		000000000000000000000203 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000103 /* AppSettings.swift */; };
+		000000000000000000000204 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000104 /* AudioPlayer.swift */; };
+		000000000000000000000205 /* BreakController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000105 /* BreakController.swift */; };
+		000000000000000000000206 /* BreakRewardBannerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000106 /* BreakRewardBannerController.swift */; };
+		000000000000000000000207 /* CallDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000107 /* CallDetector.swift */; };
+		000000000000000000000208 /* EmberControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000108 /* EmberControls.swift */; };
+		000000000000000000000209 /* EmberTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000109 /* EmberTheme.swift */; };
+		00000000000000000000020A /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010A /* HealthKitManager.swift */; };
+		00000000000000000000020B /* MenuPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010B /* MenuPopoverViewController.swift */; };
+		00000000000000000000020C /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010C /* NotificationManager.swift */; };
+		00000000000000000000020D /* OnboardingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010D /* OnboardingController.swift */; };
+		00000000000000000000020E /* OverlayWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010E /* OverlayWindowController.swift */; };
+		00000000000000000000020F /* PostureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000010F /* PostureController.swift */; };
+		000000000000000000000210 /* PostureOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000110 /* PostureOverlayController.swift */; };
+		000000000000000000000211 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000111 /* PurchaseManager.swift */; };
+		000000000000000000000212 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000112 /* SettingsViewController.swift */; };
+		000000000000000000000213 /* StatsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000113 /* StatsManager.swift */; };
+		000000000000000000000214 /* TrialManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000114 /* TrialManager.swift */; };
+		000000000000000000000215 /* WarningBannerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000115 /* WarningBannerController.swift */; };
+		000000000000000000000216 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000116 /* main.swift */; };
+		000000000000000000000400 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000300 /* StoreKit.framework */; };
+		000000000000000000000401 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000301 /* HealthKit.framework */; };
+		000000000000000000000402 /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000302 /* CoreMediaIO.framework */; };
+		000000000000000000000403 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000303 /* ServiceManagement.framework */; };
+		000000000000000000000404 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000304 /* UserNotifications.framework */; };
+		000000000000000000000405 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000305 /* AVFoundation.framework */; };
+		000000000000000000000406 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 000000000000000000000306 /* CoreAudio.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		000000000000000000000020 /* IrisBreak.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IrisBreak.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000030 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
+		000000000000000000000031 /* IrisBreak.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = IrisBreak.entitlements; sourceTree = SOURCE_ROOT; };
+		000000000000000000000032 /* IrisBreak-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IrisBreak-Bridging-Header.h"; sourceTree = SOURCE_ROOT; };
+		000000000000000000000033 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		000000000000000000000034 /* AudioSafe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioSafe.m; sourceTree = "<group>"; };
+		000000000000000000000035 /* include/AudioSafe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = include/AudioSafe.h; sourceTree = "<group>"; };
+		000000000000000000000100 /* AboutWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
+		000000000000000000000101 /* ActivityRingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActivityRingsView.swift; sourceTree = "<group>"; };
+		000000000000000000000102 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		000000000000000000000103 /* AppSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		000000000000000000000104 /* AudioPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
+		000000000000000000000105 /* BreakController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BreakController.swift; sourceTree = "<group>"; };
+		000000000000000000000106 /* BreakRewardBannerController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BreakRewardBannerController.swift; sourceTree = "<group>"; };
+		000000000000000000000107 /* CallDetector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallDetector.swift; sourceTree = "<group>"; };
+		000000000000000000000108 /* EmberControls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmberControls.swift; sourceTree = "<group>"; };
+		000000000000000000000109 /* EmberTheme.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmberTheme.swift; sourceTree = "<group>"; };
+		00000000000000000000010A /* HealthKitManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
+		00000000000000000000010B /* MenuPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuPopoverViewController.swift; sourceTree = "<group>"; };
+		00000000000000000000010C /* NotificationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		00000000000000000000010D /* OnboardingController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OnboardingController.swift; sourceTree = "<group>"; };
+		00000000000000000000010E /* OverlayWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OverlayWindowController.swift; sourceTree = "<group>"; };
+		00000000000000000000010F /* PostureController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PostureController.swift; sourceTree = "<group>"; };
+		000000000000000000000110 /* PostureOverlayController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PostureOverlayController.swift; sourceTree = "<group>"; };
+		000000000000000000000111 /* PurchaseManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
+		000000000000000000000112 /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		000000000000000000000113 /* StatsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatsManager.swift; sourceTree = "<group>"; };
+		000000000000000000000114 /* TrialManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TrialManager.swift; sourceTree = "<group>"; };
+		000000000000000000000115 /* WarningBannerController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WarningBannerController.swift; sourceTree = "<group>"; };
+		000000000000000000000116 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		000000000000000000000300 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		000000000000000000000301 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		000000000000000000000302 /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
+		000000000000000000000303 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
+		000000000000000000000304 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		000000000000000000000305 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		000000000000000000000306 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		000000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000400 /* StoreKit.framework in Frameworks */,
+				000000000000000000000401 /* HealthKit.framework in Frameworks */,
+				000000000000000000000402 /* CoreMediaIO.framework in Frameworks */,
+				000000000000000000000403 /* ServiceManagement.framework in Frameworks */,
+				000000000000000000000404 /* UserNotifications.framework in Frameworks */,
+				000000000000000000000405 /* AVFoundation.framework in Frameworks */,
+				000000000000000000000406 /* CoreAudio.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000005 /* IrisBreak */,
+				000000000000000000000006 /* AudioSafe */,
+				000000000000000000000007 /* Support */,
+				000000000000000000000004 /* Frameworks */,
+				000000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000020 /* IrisBreak.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000300 /* StoreKit.framework */,
+				000000000000000000000301 /* HealthKit.framework */,
+				000000000000000000000302 /* CoreMediaIO.framework */,
+				000000000000000000000303 /* ServiceManagement.framework */,
+				000000000000000000000304 /* UserNotifications.framework */,
+				000000000000000000000305 /* AVFoundation.framework */,
+				000000000000000000000306 /* CoreAudio.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		000000000000000000000005 /* IrisBreak */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000100 /* AboutWindowController.swift */,
+				000000000000000000000101 /* ActivityRingsView.swift */,
+				000000000000000000000102 /* AppDelegate.swift */,
+				000000000000000000000103 /* AppSettings.swift */,
+				000000000000000000000104 /* AudioPlayer.swift */,
+				000000000000000000000105 /* BreakController.swift */,
+				000000000000000000000106 /* BreakRewardBannerController.swift */,
+				000000000000000000000107 /* CallDetector.swift */,
+				000000000000000000000108 /* EmberControls.swift */,
+				000000000000000000000109 /* EmberTheme.swift */,
+				00000000000000000000010A /* HealthKitManager.swift */,
+				00000000000000000000010B /* MenuPopoverViewController.swift */,
+				00000000000000000000010C /* NotificationManager.swift */,
+				00000000000000000000010D /* OnboardingController.swift */,
+				00000000000000000000010E /* OverlayWindowController.swift */,
+				00000000000000000000010F /* PostureController.swift */,
+				000000000000000000000110 /* PostureOverlayController.swift */,
+				000000000000000000000111 /* PurchaseManager.swift */,
+				000000000000000000000112 /* SettingsViewController.swift */,
+				000000000000000000000113 /* StatsManager.swift */,
+				000000000000000000000114 /* TrialManager.swift */,
+				000000000000000000000115 /* WarningBannerController.swift */,
+				000000000000000000000116 /* main.swift */,
+			);
+			name = IrisBreak;
+			path = Sources/EyeBreak;
+			sourceTree = SOURCE_ROOT;
+		};
+		000000000000000000000006 /* AudioSafe */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000034 /* AudioSafe.m */,
+				000000000000000000000035 /* include/AudioSafe.h */,
+			);
+			name = AudioSafe;
+			path = Sources/AudioSafe;
+			sourceTree = SOURCE_ROOT;
+		};
+		000000000000000000000007 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000030 /* Info.plist */,
+				000000000000000000000031 /* IrisBreak.entitlements */,
+				000000000000000000000032 /* IrisBreak-Bridging-Header.h */,
+				000000000000000000000033 /* Assets.xcassets */,
+			);
+			name = Support;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000010 /* IrisBreak */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000601 /* Build configuration list for PBXNativeTarget "IrisBreak" */;
+			buildPhases = (
+				000000000000000000000011 /* Sources */,
+				000000000000000000000012 /* Frameworks */,
+				000000000000000000000013 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = IrisBreak;
+			productName = IrisBreak;
+			productReference = 000000000000000000000020 /* IrisBreak.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					000000000000000000000010 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = 000000000000000000000600 /* Build configuration list for PBXProject "IrisBreak" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000002;
+			productRefGroup = 000000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000010 /* IrisBreak */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		000000000000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000040 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		000000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				000000000000000000000200 /* AboutWindowController.swift in Sources */,
+				000000000000000000000201 /* ActivityRingsView.swift in Sources */,
+				000000000000000000000202 /* AppDelegate.swift in Sources */,
+				000000000000000000000203 /* AppSettings.swift in Sources */,
+				000000000000000000000204 /* AudioPlayer.swift in Sources */,
+				000000000000000000000205 /* BreakController.swift in Sources */,
+				000000000000000000000206 /* BreakRewardBannerController.swift in Sources */,
+				000000000000000000000207 /* CallDetector.swift in Sources */,
+				000000000000000000000208 /* EmberControls.swift in Sources */,
+				000000000000000000000209 /* EmberTheme.swift in Sources */,
+				00000000000000000000020A /* HealthKitManager.swift in Sources */,
+				00000000000000000000020B /* MenuPopoverViewController.swift in Sources */,
+				00000000000000000000020C /* NotificationManager.swift in Sources */,
+				00000000000000000000020D /* OnboardingController.swift in Sources */,
+				00000000000000000000020E /* OverlayWindowController.swift in Sources */,
+				00000000000000000000020F /* PostureController.swift in Sources */,
+				000000000000000000000210 /* PostureOverlayController.swift in Sources */,
+				000000000000000000000211 /* PurchaseManager.swift in Sources */,
+				000000000000000000000212 /* SettingsViewController.swift in Sources */,
+				000000000000000000000213 /* StatsManager.swift in Sources */,
+				000000000000000000000214 /* TrialManager.swift in Sources */,
+				000000000000000000000215 /* WarningBannerController.swift in Sources */,
+				000000000000000000000216 /* main.swift in Sources */,
+				000000000000000000000041 /* AudioSafe.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000500 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		000000000000000000000501 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		000000000000000000000502 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = IrisBreak.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 55Q6D4GFWP;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Sources/AudioSafe/include",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vikasanand.eyebreak;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "IrisBreak-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		000000000000000000000503 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = IrisBreak.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 55Q6D4GFWP;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/Sources/AudioSafe/include",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vikasanand.eyebreak;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "IrisBreak-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000600 /* Build configuration list for PBXProject "IrisBreak" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000500 /* Debug */,
+				000000000000000000000501 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000601 /* Build configuration list for PBXNativeTarget "IrisBreak" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000502 /* Debug */,
+				000000000000000000000503 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}

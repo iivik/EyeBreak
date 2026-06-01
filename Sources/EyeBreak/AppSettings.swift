@@ -14,6 +14,7 @@ class AppSettings {
     private let kStartAtLogin         = "com.eyebreak.startAtLogin"
     private let kShowInNotifCenter    = "com.eyebreak.showInNotifCenter"
     private let kRespectDnD           = "com.eyebreak.respectDnD"
+    private let kHealthKitEnabled     = "com.eyebreak.healthKitEnabled"
 
     var breakInterval: TimeInterval {
         get {
@@ -93,6 +94,11 @@ class AppSettings {
             return UserDefaults.standard.bool(forKey: kRespectDnD)
         }
         set { UserDefaults.standard.set(newValue, forKey: kRespectDnD) }
+    }
+
+    var healthKitEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: kHealthKitEnabled) }
+        set { UserDefaults.standard.set(newValue, forKey: kHealthKitEnabled) }
     }
 }
 

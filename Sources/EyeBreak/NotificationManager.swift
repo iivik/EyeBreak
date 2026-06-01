@@ -44,6 +44,27 @@ class NotificationManager: NSObject {
         }
     }
 
+    // MARK: - Expired Trial Reminder
+
+    /// Fires instead of the full overlay when the trial has ended.
+    func postExpiredBreakReminder() {
+        guard isBundled else { return }
+
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .authorized else { return }
+
+            let content   = UNMutableNotificationContent()
+            content.title = "Time for your eye break"
+            content.body  = "Your trial has ended — unlock IrisBreak to continue the 20-20-20 habit."
+            content.sound = .default
+
+            let req = UNNotificationRequest(identifier: "com.eyebreak.expired",
+                                            content:    content,
+                                            trigger:    nil)
+            UNUserNotificationCenter.current().add(req, withCompletionHandler: nil)
+        }
+    }
+
     func cancelBreakWarning() {
         guard isBundled else { return }
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [warningID])

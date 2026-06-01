@@ -30,6 +30,10 @@ class SettingsViewController: NSViewController {
         let header = buildHeader(theme: theme)
         root.addSubview(header)
 
+        // ── PURCHASE BANNER (shown when trial expired) ────────
+        let purchaseBanner = buildPurchaseBanner(theme: theme)
+        root.addSubview(purchaseBanner)
+
         // ── BODY ─────────────────────────────────────────────
         let body = buildBody(theme: theme)
         root.addSubview(body)
@@ -43,12 +47,18 @@ class SettingsViewController: NSViewController {
         body.translatesAutoresizingMaskIntoConstraints   = false
         footer.translatesAutoresizingMaskIntoConstraints = false
 
+        purchaseBanner.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
             header.topAnchor.constraint(equalTo: root.topAnchor),
             header.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             header.trailingAnchor.constraint(equalTo: root.trailingAnchor),
 
-            body.topAnchor.constraint(equalTo: header.bottomAnchor),
+            purchaseBanner.topAnchor.constraint(equalTo: header.bottomAnchor),
+            purchaseBanner.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            purchaseBanner.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+
+            body.topAnchor.constraint(equalTo: purchaseBanner.bottomAnchor),
             body.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             body.trailingAnchor.constraint(equalTo: root.trailingAnchor),
 
@@ -57,6 +67,19 @@ class SettingsViewController: NSViewController {
             footer.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             footer.bottomAnchor.constraint(equalTo: root.bottomAnchor),
         ])
+
+        // When trial expired: add a transparent overlay over body to block all interaction
+        if TrialManager.shared.isTrialExpired {
+            let lock = NSView()
+            lock.translatesAutoresizingMaskIntoConstraints = false
+            root.addSubview(lock)
+            NSLayoutConstraint.activate([
+                lock.topAnchor.constraint(equalTo: body.topAnchor),
+                lock.leadingAnchor.constraint(equalTo: body.leadingAnchor),
+                lock.trailingAnchor.constraint(equalTo: body.trailingAnchor),
+                lock.bottomAnchor.constraint(equalTo: body.bottomAnchor),
+            ])
+        }
 
         root.frame = NSRect(x: 0, y: 0, width: rootW, height: 630)
         self.view  = root
@@ -79,6 +102,56 @@ class SettingsViewController: NSViewController {
         statusTimer = nil
     }
 
+    // MARK: - Purchase Banner
+
+    private func buildPurchaseBanner(theme: EmberTheme) -> NSView {
+        let banner = NSView()
+        banner.wantsLayer = true
+
+        guard TrialManager.shared.isTrialExpired else {
+            banner.heightAnchor.constraint(equalToConstant: 0).isActive = true
+            return banner
+        }
+
+        banner.layer?.backgroundColor = NSColor(calibratedRed: 0.95, green: 0.55, blue: 0.28, alpha: 0.12).cgColor
+
+        let topBorder = CALayer()
+        topBorder.backgroundColor = NSColor(calibratedRed: 0.95, green: 0.55, blue: 0.28, alpha: 0.25).cgColor
+        topBorder.autoresizingMask = [.layerWidthSizable]
+        topBorder.frame = CGRect(x: 0, y: 0, width: 384, height: 0.5)
+        banner.layer?.addSublayer(topBorder)
+
+        let msg = NSTextField(labelWithString: "Trial ended · Unlock full IrisBreak")
+        msg.translatesAutoresizingMaskIntoConstraints = false
+        msg.font      = NSFont.systemFont(ofSize: 12, weight: .medium)
+        msg.textColor = theme.accent
+
+        let btn = NSButton(title: "Unlock — $4.99", target: self, action: #selector(unlockTapped))
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.isBordered       = false
+        btn.contentTintColor = theme.accent
+        btn.font             = NSFont.systemFont(ofSize: 12, weight: .semibold)
+
+        banner.addSubview(msg)
+        banner.addSubview(btn)
+
+        NSLayoutConstraint.activate([
+            msg.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 18),
+            msg.centerYAnchor.constraint(equalTo: banner.centerYAnchor),
+            msg.topAnchor.constraint(equalTo: banner.topAnchor, constant: 10),
+            msg.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -10),
+
+            btn.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -18),
+            btn.centerYAnchor.constraint(equalTo: banner.centerYAnchor),
+        ])
+
+        return banner
+    }
+
+    @objc private func unlockTapped() {
+        Task { try? await PurchaseManager.shared.purchase() }
+    }
+
     // MARK: - Header
 
     private func buildHeader(theme: EmberTheme) -> NSView {
@@ -94,8 +167,7 @@ class SettingsViewController: NSViewController {
         // Eye glyph
         let eye = EyeGlyphView(glyphSize: 16, color: theme.accent)
 
-        // "EyeBreak" label
-        let titleLbl = NSTextField(labelWithString: "EyeBreak")
+        let titleLbl = NSTextField(labelWithString: "IrisBreak")
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
         titleLbl.font      = NSFont.systemFont(ofSize: 14, weight: .semibold)
         titleLbl.textColor = theme.text
@@ -229,8 +301,7 @@ class SettingsViewController: NSViewController {
             stack.bottomAnchor.constraint(equalTo: body.bottomAnchor, constant: -6),
         ])
 
-        // ── EYE BREAK ─────────────────────────────────────
-        stack.addArrangedSubview(sectionLabel("Eye Break", theme: theme))
+        stack.addArrangedSubview(sectionLabel("Iris Break", theme: theme))
 
         let breakToggle = EmberToggle(size: .md, isOn: AppSettings.shared.breakEnabled)
         breakToggle.onChange = { [weak self] on in
@@ -386,6 +457,25 @@ class SettingsViewController: NSViewController {
         dndToggle.onChange = { on in AppSettings.shared.respectDnD = on }
         stack.addArrangedSubview(row(label: "Respect Do Not Disturb", hint: nil, right: dndToggle, tight: true, theme: theme))
 
+        let healthToggle = EmberToggle(size: .sm, isOn: AppSettings.shared.healthKitEnabled)
+        healthToggle.onChange = { on in
+            AppSettings.shared.healthKitEnabled = on
+            if on { Task { await HealthKitManager.shared.requestAuthorization() } }
+        }
+        if !TrialManager.shared.isPurchased { healthToggle.alphaValue = 0.4; healthToggle.isEnabled = false }
+        stack.addArrangedSubview(row(
+            label: "Log to Apple Health",
+            hint:  TrialManager.shared.isPurchased ? "Records each break as Mindful Minutes" : "Requires full version",
+            right: healthToggle,
+            tight: false,
+            theme: theme
+        ))
+
+        // Dim body when trial expired; a transparent overlay in loadView blocks interaction
+        if TrialManager.shared.isTrialExpired {
+            body.alphaValue = 0.45
+        }
+
         return body
     }
 
@@ -423,7 +513,58 @@ class SettingsViewController: NSViewController {
             statsStack.bottomAnchor.constraint(equalTo: footer.bottomAnchor, constant: -12),
         ])
 
+        if TrialManager.shared.isTrialExpired {
+            statsStack.alphaValue = 0.08
+            let overlay = buildFooterLockOverlay(theme: theme)
+            overlay.translatesAutoresizingMaskIntoConstraints = false
+            footer.addSubview(overlay)
+            NSLayoutConstraint.activate([
+                overlay.topAnchor.constraint(equalTo: footer.topAnchor),
+                overlay.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
+                overlay.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
+                overlay.bottomAnchor.constraint(equalTo: footer.bottomAnchor),
+            ])
+        }
+
         return footer
+    }
+
+    private func buildFooterLockOverlay(theme: EmberTheme) -> NSView {
+        let v = NSView()
+        v.wantsLayer = true
+        v.layer?.backgroundColor = theme.bgSunken.withAlphaComponent(0.92).cgColor
+
+        let lockImg = NSImageView()
+        if let img = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: nil) {
+            lockImg.image = img.withSymbolConfiguration(
+                NSImage.SymbolConfiguration(pointSize: 11, weight: .medium))
+        }
+        lockImg.contentTintColor = theme.textDim
+        lockImg.translatesAutoresizingMaskIntoConstraints = false
+
+        let text = NSTextField(labelWithString: "Stats are a premium feature")
+        text.translatesAutoresizingMaskIntoConstraints = false
+        text.font      = NSFont.systemFont(ofSize: 11, weight: .regular)
+        text.textColor = theme.textDim
+
+        let btn = NSButton(title: "Unlock — $4.99", target: self, action: #selector(unlockTapped))
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.isBordered       = false
+        btn.contentTintColor = theme.accent
+        btn.font             = NSFont.systemFont(ofSize: 11, weight: .semibold)
+
+        let stack = NSStackView(views: [lockImg, text, btn])
+        stack.orientation = .horizontal
+        stack.spacing     = 8
+        stack.alignment   = .centerY
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        v.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: v.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: v.centerYAnchor),
+        ])
+
+        return v
     }
 
     // MARK: - Stats update

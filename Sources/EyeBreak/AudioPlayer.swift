@@ -313,8 +313,9 @@ class AudioPlayer {
         eng.mainMixerNode.outputVolume = 0.85
         do {
             try eng.start()
-            nodes.forEach { $0.play() }
         } catch { return }
+        guard eng.isRunning else { return }
+        nodes.forEach { EBSafePlay($0) }
 
         // Keep engine alive until sound finishes, then release
         let totalDuration = hits.last.map { $0.startSec + 0.55 } ?? 0.7
@@ -336,7 +337,7 @@ class AudioPlayer {
     private func launch(_ eng: AVAudioEngine) {
         do {
             try eng.start()
-            players.forEach { $0.play() }
+            players.forEach { EBSafePlay($0) }
         } catch {
             print("[AudioPlayer] engine start failed: \(error.localizedDescription)")
         }

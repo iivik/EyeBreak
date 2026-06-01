@@ -55,6 +55,11 @@ class PostureController {
     }
 
     private func showOverlay() {
+        // Posture reminders are a paid feature — stop if trial expired
+        guard !TrialManager.shared.isTrialExpired else {
+            schedule()
+            return
+        }
         overlay.show { [weak self] in
             self?.schedule()
         }

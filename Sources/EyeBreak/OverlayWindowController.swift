@@ -55,6 +55,7 @@ class OverlayWindowController {
     private var windows:        [OverlayWindow] = []
     private var countdownLabel: NSTextField?
     private var timeLabel:      NSTextField?
+    private var statsBarView:   NSView?
     private var ticker:         Timer?
     private var timeTicker:     Timer?
     private var secondsLeft:    Int = 20
@@ -246,6 +247,14 @@ class OverlayWindowController {
 
         if isPrimary {
             self.countdownLabel = countdownNum
+            let statsBar = buildStatsBar(theme: theme)
+            statsBar.alphaValue = 0
+            view.addSubview(statsBar)
+            self.statsBarView = statsBar
+            NSLayoutConstraint.activate([
+                statsBar.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                statsBar.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -58),
+            ])
         }
 
         NSLayoutConstraint.activate([
@@ -311,10 +320,10 @@ class OverlayWindowController {
         dotLayer.shadowOffset    = .zero
         topLeft.layer?.addSublayer(dotLayer)
 
-        let eyebreakStr = NSMutableAttributedString(string: "EYEBREAK")
-        eyebreakStr.addAttribute(.font, value: NSFont.systemFont(ofSize: 10, weight: .semibold), range: NSRange(location: 0, length: 8))
-        eyebreakStr.addAttribute(.foregroundColor, value: theme.breakMeta, range: NSRange(location: 0, length: 8))
-        eyebreakStr.addAttribute(.kern, value: 2.2 as NSNumber, range: NSRange(location: 0, length: 8))
+        let eyebreakStr = NSMutableAttributedString(string: "IRISBREAK")
+        eyebreakStr.addAttribute(.font, value: NSFont.systemFont(ofSize: 10, weight: .semibold), range: NSRange(location: 0, length: 9))
+        eyebreakStr.addAttribute(.foregroundColor, value: theme.breakMeta, range: NSRange(location: 0, length: 9))
+        eyebreakStr.addAttribute(.kern, value: 2.2 as NSNumber, range: NSRange(location: 0, length: 9))
         let eyebreakLbl = NSTextField(labelWithAttributedString: eyebreakStr)
         eyebreakLbl.translatesAutoresizingMaskIntoConstraints = false
         topLeft.addSubview(eyebreakLbl)
@@ -415,6 +424,14 @@ class OverlayWindowController {
         str.addAttribute(.font, value: NSFont.monospacedDigitSystemFont(ofSize: 56, weight: .ultraLight), range: NSRange(location: 0, length: str.length))
         str.addAttribute(.foregroundColor, value: theme.breakNumber, range: NSRange(location: 0, length: str.length))
         label.attributedStringValue = str
+
+        // Fade in stats strip during last 5 seconds
+        if secondsLeft == 5, let bar = statsBarView {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 1.0
+                bar.animator().alphaValue = 1
+            }
+        }
     }
 
     // MARK: - Key Monitor
@@ -454,6 +471,37 @@ class OverlayWindowController {
         windows.removeAll()
         countdownLabel = nil
         timeLabel      = nil
+        statsBarView   = nil
+    }
+
+    // MARK: - Stats bar (fades in during last 5 seconds)
+
+    private func buildStatsBar(theme: EmberTheme) -> NSView {
+        let container = NSView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let s = StatsManager.shared
+        var parts = ["\(s.todayCount + 1) breaks today"]   // +1 for the in-progress break
+        if s.streakDays >= 1 { parts.append("🔥 \(s.streakDays)-day streak") }
+        let rested = s.todayRestFormatted
+        if rested != "0s" { parts.append(rested + " rested") }
+        let text = parts.joined(separator: "  ·  ")
+
+        let lbl = NSTextField(labelWithString: text)
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        lbl.font      = NSFont.systemFont(ofSize: 12, weight: .regular)
+        lbl.textColor = theme.breakMeta.withAlphaComponent(0.75)
+        lbl.alignment = .center
+        container.addSubview(lbl)
+
+        NSLayoutConstraint.activate([
+            lbl.topAnchor.constraint(equalTo: container.topAnchor),
+            lbl.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            lbl.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            lbl.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+
+        return container
     }
 
     // MARK: - Helpers
